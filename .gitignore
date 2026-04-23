@@ -1,0 +1,12 @@
+# On benchmarks keep the metadata and mpec-json files, but ignore the rest
+benchmarks/macmpec/macmpec-json
+benchmarks/mpeclib/mpeclib-gms
+benchmarks/nosbench/nosbench-json
+benchmarks/nosbench/nosbench-mat
+
+
+# --- Python Caches & Artifacts ---
+__pycache__/
+
+# --- Results ---
+results/*
