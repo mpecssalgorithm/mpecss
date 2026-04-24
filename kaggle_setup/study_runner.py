@@ -30,6 +30,7 @@ def build_resumable_command(
     num_problems: int | None = None,
     solver_params: Mapping[str, Any] | None = None,
     resume_latest: bool = False,
+    retry_failed: bool = False,
     summary_only: bool = False,
 ) -> list[str]:
     command = [
@@ -69,8 +70,10 @@ def build_resumable_command(
     solver_params_json = _solver_params_json(solver_params)
     if solver_params_json:
         command.extend(["--solver-params-json", solver_params_json])
-    if resume_latest:
+    if resume_latest or retry_failed:
         command.append("--resume-latest")
+    if retry_failed:
+        command.append("--retry-failed")
     if summary_only:
         command.append("--summary-only")
 
@@ -93,6 +96,7 @@ def run_study_plan(
     problem_list: str | None = None,
     num_problems: int | None = None,
     resume_latest: bool = False,
+    retry_failed: bool = False,
     summary_only: bool = False,
 ) -> None:
     os.makedirs(output_root, exist_ok=True)
@@ -121,6 +125,7 @@ def run_study_plan(
             num_problems=num_problems,
             solver_params=solver_params,
             resume_latest=resume_latest,
+            retry_failed=retry_failed,
             summary_only=summary_only,
         )
         print("+ " + " ".join(str(part) for part in command))
