@@ -364,7 +364,7 @@ def run_single_problem_internal(
                 "tol_comp": max(1e-8, eps_tol),
                 "rho_init": 0.01,
             }
-            res = _invoke_lpec_refinement_loop(res, problem, params=lpec_refine_params)
+            res = lpec_refinement_loop(res, problem, params=lpec_refine_params)
             res = bstat_post_check(res, problem, eps_tol=eps_tol)
             res = _preserve_stronger_raw_certificate(raw_res, res)
             time_lpec = time.perf_counter() - time_lpec_start
