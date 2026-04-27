@@ -1127,6 +1127,27 @@ def _worker_process(problem_file, loader_fn, args_path, seed, tag, results_dir,
             pass  # If this also fails the monitor loop will detect exit code != 0
 
 
+def _hydrate_queue_result(problem_file, res, results_dir, dataset_tag, tag, run_id):
+    if not isinstance(res, dict):
+        res = {"status": "crashed", "problem_file": problem_file, "error_msg": str(res)}
+    res.setdefault("problem_file", problem_file)
+    if len(res) > 10:
+        return res
+    audit_row_path = res.get("audit_result_row_path")
+    if audit_row_path and os.path.isfile(audit_row_path):
+        try:
+            with open(audit_row_path, 'r', encoding='utf-8') as f:
+                full_res = json.load(f)
+            if res.get("status") in ("crashed", "oom", "timeout", "interrupted"):
+                full_res["status"] = res["status"]
+                if "error_msg" in res:
+                    full_res["error_msg"] = res["error_msg"]
+            return full_res
+        except Exception as e:
+            logger.debug(f"Failed to hydrate {problem_file}: {e}")
+    return res
+
+
 def _run_parallel_isolated(problem_files, loader_fn, args, results_dir, dataset_tag, summary_path, run_id, custom_params=None):
     # The "Race Coordinator": Managing multiple runners at once.
     mp_context = multiprocessing.get_context('spawn')

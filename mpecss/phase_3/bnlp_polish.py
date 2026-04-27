@@ -202,7 +202,7 @@ def bnlp_polish(results, problem, solver_opts=None, eps_tol=1e-6):
         polish_details['accept_tol'] = accept_tol
         comp_ok = comp_res_polish <= accept_tol
         
-        obj_ok = _objective_not_worse(f_polish, f_star)
+        obj_ok = objective_not_worse(f_polish, f_star)
 
         if comp_ok and obj_ok:
             polish_details['accepted'] = True
@@ -210,7 +210,7 @@ def bnlp_polish(results, problem, solver_opts=None, eps_tol=1e-6):
             results['f_final'] = f_polish
             results['comp_res'] = comp_res_polish
             results['kkt_res'] = bnlp_result.get('kkt_res', float('nan'))
-            _invalidate_stationarity_claim(results, 'bnlp_polish')
+            invalidate_stationarity_claim(results, 'bnlp_polish')
             logger.info(f'BNLP polish accepted: f={f_polish:.6e} (was {f_star:.6e}), comp_res={comp_res_polish:.2e}')
         else:
             _reason = []
@@ -241,7 +241,7 @@ def bnlp_polish(results, problem, solver_opts=None, eps_tol=1e-6):
         if ultra_result['success']:
             accept_tol = results['bnlp_polish'].get('accept_tol', max(1e-6, float(eps_tol)))
             comp_ultra = benchmark_feas_res(ultra_result['z_polish'], problem)
-            if comp_ultra <= accept_tol and _objective_not_worse(ultra_result['f_val'], results['f_final']):
+            if comp_ultra <= accept_tol and objective_not_worse(ultra_result['f_val'], results['f_final']):
                 results['z_final'] = ultra_result['z_polish']
                 results['f_final'] = ultra_result['f_val']
                 results['comp_res'] = comp_ultra
@@ -293,7 +293,7 @@ def _try_alternative_partitions(results, problem, z_star, f_star, I1_base, I2_ba
         comp_res = benchmark_feas_res(bnlp_result['z_polish'], problem)
         if comp_res > accept_tol:
             continue
-        if not _objective_not_worse(bnlp_result['f_val'], best_f):
+        if not objective_not_worse(bnlp_result['f_val'], best_f):
             continue
         
         best_f = bnlp_result['f_val']
@@ -310,7 +310,7 @@ def _try_alternative_partitions(results, problem, z_star, f_star, I1_base, I2_ba
         results['bnlp_polish']['accepted'] = True
         results['bnlp_polish']['alt_partition_used'] = True
         results['bnlp_polish']['n_partitions_tried'] = n_tried
-        _invalidate_stationarity_claim(results, 'bnlp_alt_partition')
+        invalidate_stationarity_claim(results, 'bnlp_alt_partition')
         logger.info(f'Alternative partition accepted: f={best_f:.6e} (tried {n_tried} partitions)')
     
     return results
