@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preflight checks for Kaggle benchmark notebooks."""
+# Preflight checks for Kaggle benchmark notebooks.
 
 from __future__ import annotations
 

@@ -1,15 +1,4 @@
-"""
-The "Final Polish": Making a good solution even better.
-
-Sometimes, the main solver gets "close enough" but isn't quite 
-perfect. This module takes that solution and "polishes" it. 
-It looks for small ways to improve the result without breaking 
-any rules (complementarity).
-
-It's like a clinical proof: we check if any better direction 
-exists, and if so, we follow it until we reach the absolute 
-best point possible (B-stationarity).
-"""
+# The "Final Polish": Making a good solution even better.
 
 import logging
 import time
@@ -41,14 +30,7 @@ def lpec_refinement_loop(
     solver_opts: Optional[Dict[str, Any]] = None,
     params: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    """
-    The Precision Loop: Improving the solution step-by-step.
-
-    We repeatedly check for a "better way down" (descent direction). 
-    If we find one, we take a small step, solve a simplified 
-    version of the problem (BNLP), and update our position.
-    """
-    # Merge parameters
+    # The Precision Loop: Improving the solution step-by-step.
     p = dict(_DEFAULT_PARAMS)
     if params:
         p.update(params)
@@ -77,10 +59,8 @@ def lpec_refinement_loop(
     loop_timeout  = p.get('loop_timeout', 120.0)
     loop_timed_out = False
 
-    # ── Outer loop ─────────────────────────────────────────────────────────
     for k_out in range(p['N_out']):
 
-        # Check wall-clock timeout
         if time.perf_counter() - total_start > loop_timeout:
             logger.info(
                 f'LPEC refine: loop timeout after '
@@ -89,20 +69,16 @@ def lpec_refinement_loop(
             loop_timed_out = True
             break
 
-        # Reset trust-region at start of each outer iteration
         rho       = p['rho_init']
         inner_done = False
 
-        # ── Inner loop ──────────────────────────────────────────────────────
         for l_in in range(p['N_in']):
 
-            # Check wall-clock timeout inside inner loop
             if time.perf_counter() - total_start > loop_timeout:
                 logger.info('LPEC refine: loop timeout in inner iteration')
                 loop_timed_out = True
                 break
 
-            # ── LPEC: check B-stationarity and get descent direction ────────
             is_bstat, lpec_obj, licq_holds, details = certify_bstationarity(
                 z_k, problem, f_val=f_k,
                 tol=p['tol_B'], dir_bound=rho,
@@ -110,7 +86,6 @@ def lpec_refinement_loop(
             )
             total_lpecs += 1
 
-            # ── B-stationary: update results and return ─────────────────────
             if is_bstat:
                 logger.info(
                     f'LPEC refine: B-stationary at outer={k_out}'
@@ -137,7 +112,6 @@ def lpec_refinement_loop(
                 results['lpec_refine']   = refine_details
                 return results
 
-            # ── LPEC timed out: shrink rho and retry ────────────────────────
             if details.get('timed_out', False):
                 logger.info('LPEC refine: LPEC timed out, skipping direction')
                 rho = max(p['rho_lb'], p['gamma_L'] * rho)
@@ -145,26 +119,21 @@ def lpec_refinement_loop(
                     break
                 continue
 
-            # ── Extract descent direction ────────────────────────────────────
             d = details.get('best_direction')
 
             if d is None:
-                # No direction found — shrink trust-region
                 rho = max(p['rho_lb'], p['gamma_L'] * rho)
                 logger.debug(f'No LPEC direction, reducing rho to {rho:.2e}')
                 if rho <= p['rho_lb']:
                     break
                 continue
 
-            # ── Identify active set from trial point z_k + d ────────────────
             z_trial = z_k + d
             I1_new, I2_new, _, I3_new = identify_active_set(z_trial, problem)
 
-            # Fall back to current point's active set if trial has none
             if not I1_new and not I2_new and not I3_new:
                 I1_new, I2_new, _, I3_new = identify_active_set(z_k, problem)
 
-            # ── Solve BNLP with active-set partition ─────────────────────────
             obj_margin = max(1e-8, 1e-10 * max(1.0, abs(float(f_k))))
             f_cut = f_k - obj_margin
             bnlp_result = _build_bnlp(
@@ -200,7 +169,6 @@ def lpec_refinement_loop(
             z_new    = bnlp_result['z_polish']
             comp_new = complementarity_residual(z_new, problem)
 
-            # ── Accept or reject step ────────────────────────────────────────
             if f_new < f_k and comp_new < p['tol_comp']:
                 logger.info(
                     f'LPEC refine: step accepted, outer={k_out}'
@@ -210,7 +178,6 @@ def lpec_refinement_loop(
                 z_k        = z_new
                 f_k        = f_new
                 kkt_k      = bnlp_result.get('kkt_res', float('nan'))
-                # Expand trust-region on success
                 rho        = min(p['rho_ub'], rho / p['gamma_L'])
                 inner_done = True
                 break
@@ -223,24 +190,19 @@ def lpec_refinement_loop(
                 if rho <= p['rho_lb']:
                     break
 
-        # ── Update inner total count (actual iters used, not maximum) ───────
         refine_details['n_inner_total'] += (l_in + 1) if p['N_in'] > 0 else 0
 
-        # ── Exit conditions ───────────────────────────────────────────────
         if refine_details['bstat_found']:
             break
         if loop_timed_out:
             break
         if inner_done:
-            # Step accepted — start a new outer iteration
             continue
         else:
-            # Trust-region exhausted
             if rho <= p['rho_lb']:
                 logger.info(f'LPEC refine: trust-region exhausted at outer={k_out}')
                 break
 
-    # ── Final bookkeeping ─────────────────────────────────────────────────
     refine_details['n_outer']   = (min(k_out + 1, p['N_out'])
                                    if p['N_out'] > 0 else 0)
     refine_details['n_lpecs']   = total_lpecs
@@ -248,7 +210,6 @@ def lpec_refinement_loop(
     refine_details['improvement'] = f_initial - f_k
     refine_details['cpu_time']  = time.perf_counter() - total_start
 
-    # Update results if improvement was found
     if f_k < f_initial:
         results['z_final']  = z_k
         results['f_final']  = f_k

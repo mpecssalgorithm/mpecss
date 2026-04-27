@@ -1,21 +1,4 @@
-"""
-B-Stationarity: The "Clinical Proof" for MPEC solutions.
-
-Getting a solution that looks good is one thing; proving it is
-mathematically solid is another. This module provides the tools
-to perform that proof.
-
-We use a technique called "LPEC Enumeration." It's like checking
-every possible small move we could make from our current spot to
-see if any of them lead to a better (lower) score. If NO such
-move exists, we have reached a "B-stationary" point.
-
-Think of it as the "Final Exam" for the solver's answer.
-
-Memory Management:
-- Uses LRU cache for Jacobian functions to prevent unbounded memory growth
-- Integrates with solver_cache.py memory monitoring
-"""
+# B-Stationarity: The "Clinical Proof" for MPEC solutions.
 
 import logging
 import time
@@ -23,7 +6,7 @@ from typing import Dict, Any, Optional, Tuple, List
 from collections import OrderedDict
 import numpy as np
 import casadi as ca
-from mpecss.helpers.comp_residuals import complementarity_residual
+from mpecss.helpers.comp_residuals import complementarity_residual, mcp_feasibility_residual
 
 logger = logging.getLogger('mpecss.bstationarity')
 
@@ -33,14 +16,11 @@ _LICQ_TOL = 1e-08
 _DIR_BOUND = 1.0
 _BSTAT_TIMEOUT = 60.0
 
-# ══════════════════════════════════════════════════════════════════════════════
-# LRU JACOBIAN CACHE - prevents unbounded memory growth during long benchmarks
-# ══════════════════════════════════════════════════════════════════════════════
 MAX_BSTAT_JACOBIAN_CACHE_SIZE = 30  # Keep last 30 problem Jacobians
 
 
 class _BstatJacobianLRUCache:
-    """Simple LRU cache for B-stationarity Jacobian functions."""
+    # Simple LRU cache for B-stationarity Jacobian functions.
 
     def __init__(self, max_size: int):
         self._cache: OrderedDict = OrderedDict()
@@ -77,47 +57,27 @@ class _BstatJacobianLRUCache:
 _JACOBIAN_CACHE = _BstatJacobianLRUCache(MAX_BSTAT_JACOBIAN_CACHE_SIZE)
 
 def clear_jacobian_cache():
-    """Clear the Jacobian cache to free memory."""
+    # Clear the Jacobian cache to free memory.
     _JACOBIAN_CACHE.clear()
 
 
 def _unsupported_certificate_reason(problem: Dict[str, Any]) -> Optional[str]:
-    # We now properly handle nonstandard bounds in LPEC enumeration
     return None
 
 
 def _compute_jacobians(z, problem):
-    """
-    Compute Jacobians of f, g_orig, G, H at point z.
-
-    Uses LRU cache to prevent unbounded memory growth during long benchmarks.
-
-    Returns
-    -------
-    grad_f : np.ndarray (n_x,)
-        Gradient of objective.
-    J_g : np.ndarray (n_con, n_x) or None
-        Jacobian of original constraints (None if no constraints).
-    J_G : np.ndarray (n_comp, n_x)
-        Jacobian of G.
-    J_H : np.ndarray (n_comp, n_x)
-        Jacobian of H.
-    """
+    # Compute Jacobians of f, g_orig, G, H at point z.
     n_x = problem['n_x']
     z = np.asarray(z).flatten()
     prob_name = problem.get('name', 'unknown')
 
-    # Include n_x, n_comp, n_con in cache key to avoid dimension mismatches
-    # between different benchmark suites with same problem names
     n_comp = problem.get('n_comp', 0)
     n_con = problem.get('n_con', 0)
     family = problem.get('family', 'unknown')
     cache_key = f"{prob_name}|{family}|{n_x}|{n_comp}|{n_con}"
 
-    # Check LRU cache
     cached = _JACOBIAN_CACHE.get(cache_key)
     if cached is None:
-        # Build Jacobian functions
         _sym = ca.MX.sym if n_x >= 500 else ca.SX.sym
         x_sym = _sym('x', n_x)
 
@@ -136,7 +96,6 @@ def _compute_jacobians(z, problem):
             g_orig_expr = info['g'][:n_con]
             jac_g_fn = ca.Function('jac_g', [info['x']], [ca.jacobian(g_orig_expr, info['x'])])
 
-        # Store in LRU cache (may evict old entries)
         _JACOBIAN_CACHE.put(cache_key, (grad_f_fn, jac_G_fn, jac_H_fn, jac_g_fn))
         cached = (grad_f_fn, jac_G_fn, jac_H_fn, jac_g_fn)
 
@@ -162,35 +121,20 @@ def _compute_jacobians(z, problem):
 
 
 def _classify_complementarity_indices(z, problem, tol=_ACTIVE_TOL):
-    """
-    Classify complementarity indices into active sets.
-
-    Uses shifted complementarity values to properly handle nonzero lower bounds
-    (MPEClib, NOSBENCH style). Activity is detected on the shifted functions
-    that are actually enforced in the NLP formulation.
-
-    Returns
-    -------
-    I_G : list[int]
-        Indices where G_shifted_i ≈ 0 and H_shifted_i > tol (G-active only).
-    I_H : list[int]
-        Indices where H_shifted_i ≈ 0 and G_shifted_i > tol (H-active only).
-    I_ubH : list[int]
-        Indices where H_shifted_i ≈ ubH_i and G_shifted_i > tol.
-    I_B_lower : list[int]
-        Biactive indices where both |G_shifted_i| < tol and |H_shifted_i| < tol.
-    I_B_upper : list[int]
-        Biactive indices where both |G_shifted_i| < tol and |H_shifted_i - ubH_i| < tol.
-    I_free : list[int]
-        Indices where neither active.
-    """
+    # Classify complementarity indices into active sets.
     from mpecss.helpers.loaders.macmpec_loader import evaluate_GH
     G, H = evaluate_GH(z, problem)
 
-    # Apply bound shifts for nonstandard lower bounds (audit finding A4)
     lbG_eff = np.array(problem.get('lbG_eff', np.zeros(len(G))), dtype=float)
     lbH_eff = np.array(problem.get('lbH_eff', np.zeros(len(H))), dtype=float)
-    G_shifted = G - lbG_eff
+    G_is_free = list(problem.get('G_is_free', []))
+    if len(G_is_free) < len(G):
+        G_is_free.extend([False] * (len(G) - len(G_is_free)))
+
+    G_shifted = G.copy()
+    for i in range(len(G)):
+        if not G_is_free[i]:
+            G_shifted[i] = G_shifted[i] - lbG_eff[i]
     H_shifted = H - lbH_eff
 
     I_G = []  # G_i=0, H_i strictly feasible
@@ -202,11 +146,7 @@ def _classify_complementarity_indices(z, problem, tol=_ACTIVE_TOL):
 
     ubH_finite = problem.get('ubH_finite', [])
     ubH_map = {i: ub for i, ub in ubH_finite}
-    G_is_free = problem.get('G_is_free', [])
-
     for i in range(len(G)):
-        g_free = G_is_free[i] if i < len(G_is_free) else False
-        
         g_val = G_shifted[i]
         h_val = H_shifted[i]
         
@@ -219,17 +159,17 @@ def _classify_complementarity_indices(z, problem, tol=_ACTIVE_TOL):
                 h_upper_active = True
 
         if h_lower_active:
-            if g_active and not g_free:
+            if g_active:
                 I_B_lower.append(i)
             else:
                 I_H.append(i)
         elif h_upper_active:
-            if g_active and not g_free:
+            if g_active:
                 I_B_upper.append(i)
             else:
                 I_ubH.append(i)
         else:
-            if g_active and not g_free:
+            if g_active:
                 I_G.append(i)
             else:
                 I_free.append(i)
@@ -238,40 +178,13 @@ def _classify_complementarity_indices(z, problem, tol=_ACTIVE_TOL):
 
 
 def check_mpec_licq(z, problem, tol=_LICQ_TOL):
-    """
-    Step 1: The "Shortcut" (LICQ Check).
-
-    If the problem is "well-behaved" (MPEC-LICQ holds), then we can 
-    prove B-stationarity very easily using the "Sign Test." 
-    This function checks if we are allowed to take that shortcut.
-
-    Parameters
-    ----------
-    z : np.ndarray
-        Point to check.
-    problem : dict
-        Problem specification.
-    tol : float
-        Tolerance for rank deficiency.
-
-    Returns
-    -------
-    licq_holds : bool
-        True if MPEC-LICQ holds at z.
-    rank : int
-        Rank of the active constraint Jacobian.
-    n_active : int
-        Number of active constraint gradients.
-    details : str
-        Diagnostic string.
-    """
+    # Step 1: The "Shortcut" (LICQ Check).
     grad_f, J_g, J_G, J_H = _compute_jacobians(z, problem)
     I_G, I_H, I_ubH, I_B_lower, I_B_upper, I_free = _classify_complementarity_indices(z, problem, tol=_ACTIVE_TOL)
     n_x = problem['n_x']
     
     active_rows = []
     
-    # Add active constraint gradients
     if J_g is not None:
         n_con = problem.get('n_con', 0)
         info = problem['build_casadi'](0, 0)
@@ -285,7 +198,6 @@ def check_mpec_licq(z, problem, tol=_LICQ_TOL):
             if abs(g_val[j] - lbg[j]) < tol or abs(g_val[j] - ubg[j]) < tol:
                 active_rows.append(J_g[j])
     
-    # Add ∇G_i for G-active and biactive
     for i in I_G:
         active_rows.append(J_G[i])
     for i in I_B_lower:
@@ -295,7 +207,6 @@ def check_mpec_licq(z, problem, tol=_LICQ_TOL):
         active_rows.append(J_G[i])
         active_rows.append(J_H[i])
     
-    # Add ∇H_i for H-active
     for i in I_H:
         active_rows.append(J_H[i])
     for i in I_ubH:
@@ -317,50 +228,7 @@ def check_mpec_licq(z, problem, tol=_LICQ_TOL):
 
 
 def certify_bstationarity(z, problem, f_val=None, tol=_BSTAT_TOL, dir_bound=None, timeout=None):
-    """
-    B-stationarity certification via LPEC enumeration.
-
-    Per Outrata (1999) and Pang & Fukushima (1999), B-stationarity means:
-        grad f(x*)^T d >= 0 for all d in F_Omega^MPCC(x*)
-
-    The MPCC linearized feasible cone F_Omega^MPCC(x*) includes:
-        - Active original constraints: grad g_j(x*)^T d = 0 for active equality,
-          grad g_j(x*)^T d >= 0 for active inequality at lower bound
-        - I_G (G-active, H-free): grad G_i(x*)^T d = 0
-        - I_H (H-active, G-free): grad H_i(x*)^T d = 0
-        - I_B (biactive): 0 <= grad G_i(x*)^T d ⟂ grad H_i(x*)^T d >= 0
-          (requires 2^|I_B| branch enumeration)
-
-    Parameters
-    ----------
-    z : np.ndarray
-        Candidate point.
-    problem : dict
-        Problem specification.
-    f_val : float or None
-        Objective value at z (for logging only).
-    tol : float
-        Tolerance for B-stationarity declaration.
-    dir_bound : float or None
-        Trust-region radius for the LPEC direction.
-    timeout : float or None
-        Wall-clock timeout in seconds.
-
-    Returns
-    -------
-    is_bstat : bool or None
-        True if certified B-stationary, False if descent found, None if uncertified
-    lpec_obj : float
-        Optimal value of the LPEC.
-    licq_holds : bool
-        Whether MPEC-LICQ holds at z.
-    details : dict
-        Diagnostic information including 'lpec_status' which can be:
-        - 'complete': all branches enumerated
-        - 'timed_out': timeout reached before completion
-        - 'cap_exceeded': enumeration cap reached (uncertified)
-        - 'infeasible_skip': point not complementarity-feasible
-    """
+    # B-stationarity certification via LPEC enumeration.
     cert_reason = _unsupported_certificate_reason(problem)
     if cert_reason:
         return None, float('nan'), None, {
@@ -385,14 +253,17 @@ def certify_bstationarity(z, problem, f_val=None, tol=_BSTAT_TOL, dir_bound=None
     n_con = problem.get('n_con', 0)
     z = np.asarray(z).flatten()
 
-    # Check complementarity feasibility before certifying B-stationarity
     current_comp_res = float(complementarity_residual(z, problem))
-    if current_comp_res > tol * 100:
-        logger.warning(f"B-stat certification skipped: comp_res={current_comp_res:.2e} >> tol={tol:.2e}")
+    current_mcp_res = float(mcp_feasibility_residual(z, problem))
+    if current_mcp_res > tol * 100:
+        logger.warning(
+            f"B-stat certification skipped: mcp_feas_res={current_mcp_res:.2e} >> tol={tol:.2e}"
+        )
         return False, float('inf'), False, {
             'lpec_status': 'infeasible_skip',
             'classification': 'not_certified_infeasible',
             'comp_res': current_comp_res,
+            'mcp_feas_res': current_mcp_res,
             'timed_out': False,
             'elapsed_s': 0.0,
             'n_active_G': None,
@@ -402,27 +273,22 @@ def certify_bstationarity(z, problem, f_val=None, tol=_BSTAT_TOL, dir_bound=None
             'n_feasible_branches': 0,
         }
 
-    # Compute Jacobians
     grad_f, J_g, J_G, J_H = _compute_jacobians(z, problem)
     I_G, I_H, I_ubH, I_B_lower, I_B_upper, I_free = _classify_complementarity_indices(z, problem)
 
-    # Check LICQ
     licq_holds, licq_rank, n_active, licq_details = check_mpec_licq(z, problem)
 
     n_biactive = len(I_B_lower) + len(I_B_upper)
     logger.info(f'B-stat check: |I_G|={len(I_G)}, |I_H|={len(I_H)}, |I_ubH|={len(I_ubH)}, |I_B|={n_biactive}, LICQ={licq_holds}')
 
-    # Full LPEC enumeration
     from scipy.optimize import linprog
     t_start = time.time()
 
-    # Build base constraints that apply to ALL branches
     A_ub_base = []
     b_ub_base = []
     A_eq_base = []
     b_eq_base = []
 
-    # Bound constraints: -dir_bound <= d <= dir_bound, adjusted for variable bounds
     bounds = [(-dir_bound, dir_bound) for _ in range(n_x)]
 
     info = problem['build_casadi'](0, 0)
@@ -438,10 +304,7 @@ def certify_bstationarity(z, problem, f_val=None, tol=_BSTAT_TOL, dir_bound=None
         if ubx[i] < _BIG:
             bounds[i] = (bounds[i][0], min(bounds[i][1], ubx[i] - z[i]))
 
-    # Add active ORIGINAL constraint gradients (required by literature definition)
     if J_g is not None and n_con > 0:
-        # Evaluate original constraints using CasADi symbolic expression
-        # (g_fn is not stored in problem dict, must build from info['g'])
         g_orig_expr = info['g'][:n_con]
         _g_eval_fn = ca.Function('g_bstat_eval', [info['x']], [g_orig_expr])
         g_val = np.asarray(_g_eval_fn(z)).flatten()
@@ -449,34 +312,27 @@ def certify_bstationarity(z, problem, f_val=None, tol=_BSTAT_TOL, dir_bound=None
             lb_active = abs(g_val[j] - lbg[j]) < tol if lbg[j] > -_BIG else False
             ub_active = abs(g_val[j] - ubg[j]) < tol if ubg[j] < _BIG else False
             if lb_active and ub_active:
-                # Equality constraint: grad_g_j^T d = 0
                 A_eq_base.append(J_g[j])
                 b_eq_base.append(0.0)
             elif lb_active:
-                # Lower bound active: grad_g_j^T d >= 0 → -grad_g_j^T d <= 0
                 A_ub_base.append(-J_g[j])
                 b_ub_base.append(0.0)
             elif ub_active:
-                # Upper bound active: grad_g_j^T d <= 0
                 A_ub_base.append(J_g[j])
                 b_ub_base.append(0.0)
 
-    # Add I_G equality constraints: grad G_i^T d = 0 for G-active indices
     for i in I_G:
         A_eq_base.append(J_G[i])
         b_eq_base.append(0.0)
 
-    # Add I_H equality constraints: grad H_i^T d = 0 for H-active indices
     for i in I_H:
         A_eq_base.append(J_H[i])
         b_eq_base.append(0.0)
 
-    # Add I_ubH equality constraints: grad H_i^T d = 0 for H upper bound active
     for i in I_ubH:
         A_eq_base.append(J_H[i])
         b_eq_base.append(0.0)
 
-    # Convert base constraints to arrays
     A_eq = np.vstack(A_eq_base) if A_eq_base else None
     b_eq = np.array(b_eq_base) if b_eq_base else None
 
@@ -489,7 +345,6 @@ def certify_bstationarity(z, problem, f_val=None, tol=_BSTAT_TOL, dir_bound=None
     n_feasible_branches = 0
 
     if n_biactive == 0:
-        # No biactive indices: solve single LP with base constraints only
         A_ub = np.vstack(A_ub_base) if A_ub_base else None
         b_ub = np.array(b_ub_base) if b_ub_base else None
         branches_explored = 1
@@ -505,7 +360,6 @@ def certify_bstationarity(z, problem, f_val=None, tol=_BSTAT_TOL, dir_bound=None
         except Exception as e:
             logger.debug(f'LP solve failed (no biactive): {e}')
     else:
-        # Enumerate branches for biactive indices
         max_enum = 2**n_biactive
         enum_cap = 2**15
 
@@ -520,7 +374,6 @@ def certify_bstationarity(z, problem, f_val=None, tol=_BSTAT_TOL, dir_bound=None
                 timed_out = True
                 break
 
-            # Build branch-specific inequality constraints
             A_ub_branch = list(A_ub_base)
             b_ub_branch = list(b_ub_base)
             A_eq_branch = list(A_eq_base)
@@ -528,39 +381,32 @@ def certify_bstationarity(z, problem, f_val=None, tol=_BSTAT_TOL, dir_bound=None
 
             bit_pos = 0
             
-            # For lower-bound biactive indices
             for i in I_B_lower:
                 if (branch_idx >> bit_pos) & 1:
-                    # G stays active
                     A_eq_branch.append(J_G[i])
                     b_eq_branch.append(0.0)
                     A_ub_branch.append(-J_H[i]) # >= 0
                     b_ub_branch.append(0.0)
                 else:
-                    # H stays active
                     A_eq_branch.append(J_H[i])
                     b_eq_branch.append(0.0)
                     A_ub_branch.append(-J_G[i]) # >= 0
                     b_ub_branch.append(0.0)
                 bit_pos += 1
                 
-            # For upper-bound biactive indices
             for i in I_B_upper:
                 if (branch_idx >> bit_pos) & 1:
-                    # G stays active
                     A_eq_branch.append(J_G[i])
                     b_eq_branch.append(0.0)
                     A_ub_branch.append(J_H[i]) # <= 0
                     b_ub_branch.append(0.0)
                 else:
-                    # H stays active
                     A_eq_branch.append(J_H[i])
                     b_eq_branch.append(0.0)
                     A_ub_branch.append(J_G[i]) # <= 0
                     b_ub_branch.append(0.0)
                 bit_pos += 1
 
-            # Solve LP
             A_ub = np.vstack(A_ub_branch) if A_ub_branch else None
             b_ub = np.array(b_ub_branch) if b_ub_branch else None
             A_eq = np.vstack(A_eq_branch) if A_eq_branch else None
@@ -580,10 +426,7 @@ def certify_bstationarity(z, problem, f_val=None, tol=_BSTAT_TOL, dir_bound=None
                 logger.debug(f'LP solve failed for branch {branch_idx}: {e}')
                 continue
 
-    # Determine certification status
     if timed_out or cap_exceeded:
-        # Incomplete enumeration cannot prove B-stationarity, but any feasible
-        # descent direction found before termination is already enough to refute it.
         if best_obj >= -tol:
             is_bstat = None
             classification = 'uncertified_favorable'
@@ -624,43 +467,13 @@ def certify_bstationarity(z, problem, f_val=None, tol=_BSTAT_TOL, dir_bound=None
 
 
 def bstat_post_check(result, problem, timeout=None, eps_tol=1e-6):
-    """
-    Convenience wrapper: run B-stationarity check on MPECSS result.
-
-    Runs the check if:
-    - status='converged' and stationarity='S' or 'C' (original behavior), OR
-    - status is a non-converged failure but comp_res is good (within 10x eps_tol) -- Fix 2
-
-    Parameters
-    ----------
-    result : dict
-        Result dictionary from run_mpecss().
-    problem : dict
-        Problem specification.
-    timeout : float or None
-        Wall-clock timeout in seconds for the LPEC enumeration.
-    eps_tol : float
-        Complementarity tolerance (default 1e-6).
-
-    Returns
-    -------
-    result : dict
-        Updated result dict with added keys:
-        - 'b_stationarity': bool or None
-        - 'lpec_obj': float or None
-        - 'licq_holds': bool or None
-        - 'bstat_details': dict or None
-        - 'stationarity': upgraded to 'B' if B-stat certified
-        - 'status': upgraded to 'converged' if B-stat certified
-    """
+    # Convenience wrapper: run B-stationarity check on MPECSS result.
     result = dict(result)
 
     status = result.get('status')
     stationarity = result.get('stationarity')
     comp_res = result.get('comp_res', float('inf'))
 
-    # Fix 2: Also attempt B-stat check for non-converged with good comp_res
-    # Include all failure statuses that might still have salvageable solutions
     _non_converged_statuses = ('comp_infeasible', 'nlp_failure', 'stationarity_unverifiable', 
                                'restoration_stagnation', 'max_restorations', 'stagnation', 'max_iter')
     should_check = (
@@ -669,8 +482,6 @@ def bstat_post_check(result, problem, timeout=None, eps_tol=1e-6):
     )
 
     if not should_check:
-        # Fix B3: Only set fields to None if they were not already populated by run_mpecss Phase III
-        # This preserves bstat_details from the main algorithm for B-stationary problems
         if result.get('b_stationarity') is None:
             result['b_stationarity'] = None
         if result.get('lpec_obj') is None:

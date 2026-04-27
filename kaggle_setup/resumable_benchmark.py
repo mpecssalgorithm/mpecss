@@ -4,7 +4,9 @@ Kaggle-friendly resumable benchmark wrapper.
 
 Thin wrapper over mpecss.helpers.benchmark_utils.run_benchmark_main.
 Adds Kaggle-specific features:
-  --resume-latest   Find the most recent CSV for this dataset and resume from it
+  --resume-latest   Find the most recent CSV under --resume-search-dir or /kaggle/input
+  --resume-csv      Resume from an explicit CSV path (for example from /kaggle/input)
+  --resume-search-dir  Search this directory for the latest resume CSV
   --summary-only    Print a progress summary without running any problems
   --dataset         Choose which benchmark suite to run
   --repo-dir        Path to the Org-MPECSS checkout (for Kaggle path setup)
@@ -34,6 +36,19 @@ def _find_latest_csv(results_dir: str, dataset_tag: str) -> str | None:
     if not candidates:
         return None
     return candidates[-1]
+
+
+def _find_latest_csv_recursive(search_root: str, dataset_tag: str) -> str | None:
+    """Find the most recent CSV for a dataset tag anywhere under search_root."""
+    pattern = os.path.join(search_root, "**", f"{dataset_tag}_full_*.csv")
+    candidates = [
+        path
+        for path in glob.glob(pattern, recursive=True)
+        if os.path.isfile(path)
+    ]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda path: (os.path.getmtime(path), path))
 
 
 def _print_summary(csv_path: str, dataset_tag: str) -> None:
@@ -179,7 +194,11 @@ def main() -> int:
                              "Use this to run a subset of problems (e.g., for splitting large benchmarks).")
     parser.add_argument("--skip-preflight", action="store_true")
     parser.add_argument("--resume-latest", action="store_true",
-                        help="Automatically find and resume from the latest CSV.")
+                        help="Automatically find and resume from the latest CSV under --resume-search-dir or /kaggle/input.")
+    parser.add_argument("--resume-csv", type=str, default=None,
+                        help="Explicit CSV path to resume from (supports /kaggle/input/... paths).")
+    parser.add_argument("--resume-search-dir", type=str, default=None,
+                        help="Directory to recursively search for latest CSV when --resume-latest is set.")
     parser.add_argument("--retry-failed", action="store_true",
                         help="When resuming, re-run OOM/timeout/crash problems.")
     parser.add_argument("--summary-only", action="store_true",
@@ -381,14 +400,43 @@ def main() -> int:
     # Pass output directory to ensure results go to persistent location
     injected_args.extend(["--output-dir", results_dir])
 
-    # Handle --resume-latest
-    if args.resume_latest:
-        latest = _find_latest_csv(results_dir, args.dataset)
-        if latest:
-            logger.info(f"Resuming from: {latest}")
-            injected_args.extend(["--resume", latest])
-        else:
+    # Handle resume source selection
+    resume_csv = None
+    if args.resume_csv:
+        if not os.path.isfile(args.resume_csv):
+            logger.error(f"Resume CSV not found: {args.resume_csv}")
+            return 2
+        resume_csv = args.resume_csv
+    elif args.resume_latest:
+        search_roots = []
+        if args.resume_search_dir:
+            search_roots.append(args.resume_search_dir)
+        # Search Kaggle input datasets so old CSV can come from uploaded outputs.
+        if os.path.isdir("/kaggle/input"):
+            search_roots.append("/kaggle/input")
+
+        seen = set()
+        for root in search_roots:
+            root_abs = os.path.abspath(root)
+            if root_abs in seen or not os.path.isdir(root_abs):
+                continue
+            seen.add(root_abs)
+            latest = _find_latest_csv_recursive(root_abs, args.dataset)
+            if latest:
+                logger.info(f"Resolved resume CSV from {root_abs}: {latest}")
+                resume_csv = latest
+                break
+
+        if not search_roots:
+            logger.info(
+                "No resume search source available. Use --resume-csv or --resume-search-dir."
+            )
+        if not resume_csv:
             logger.info(f"No previous CSV found for '{args.dataset}'. Starting fresh.")
+
+    if resume_csv:
+        logger.info(f"Resuming from: {resume_csv}")
+        injected_args.extend(["--resume", resume_csv])
 
     # Replace sys.argv so run_benchmark_main's argparse sees our args
     original_argv = sys.argv

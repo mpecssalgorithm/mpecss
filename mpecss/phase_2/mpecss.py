@@ -1,22 +1,4 @@
-"""
-MPECSS: A Solver for Mathematical Programs with Equilibrium Constraints (MPECs).
-
-Think of this solver as a "gentle pathway" to solve hard optimization problems. 
-Instead of hitting the "equilibrium constraints" head-on (which is mathematically
-difficult), we "smooth" them out and gradually make them sharper as we get 
-closer to the solution.
-
-This file manages the "Outer Loop" - the brain of the solver that coordinates:
-1. Phase I: Finding a starting point that is physically possible (feasible).
-2. Phase II: The main solving loop that iteratively sharpens the problem.
-3. Phase III: A "Final Polish" to verify that our answer is mathematically solid.
-
-Stationarity Labels (Quality of Solution):
-- "S" (Strong): The gold standard. The best possible stationary point.
-- "B" (B-stationary): A very high-quality and reliable solution.
-- "C" (C-stationary): A solid solution, but maybe not the absolute best.
-- "FAIL": The problem was too complex to solve this time.
-"""
+# MPECSS: A Solver for Mathematical Programs with Equilibrium Constraints (MPECs).
 
 from __future__ import annotations
 
@@ -37,12 +19,8 @@ from mpecss.phase_3.bnlp_polish import bnlp_polish, identify_active_set, _build_
 
 logger = logging.getLogger('mpecss.phase_2')
 
-# Threshold for n_biactive above which Phase III LPEC becomes expensive
-# If n_biactive > this, prefer Phase II over direct Phase III jump
 _LPEC_BIACTIVE_THRESHOLD = 15
 
-# Default max outer iterations. The t_k floor at 1e-14 ensures the homotopy
-# converges before exhausting this many iterations on well-posed problems.
 _DEFAULT_MAX_OUTER = 3000
 
 DEFAULT_PARAMS: Dict[str, Any] = {
@@ -63,42 +41,20 @@ DEFAULT_PARAMS: Dict[str, Any] = {
     "feasibility_phase": True,
     "phase1_max_attempts": 3,
     "phase1_random_restarts": 3,
-    # Legacy compatibility knobs retained so benchmark CSVs remain comparable
-    # with the April 11 official run, even though restoration is no longer used.
     "restoration_strategy": "cascade",
     "restoration_enabled": True,
     "perturb_eps": 0.01,
     "gamma": 1.0,
     "step_size": 0.1,
-    # ── Recovery guards ──────────────────────────────────────────────────────
-    # These three parameters prevent the outer loop from running forever on
-    # hard problems.  Without them the loop can cycle for hours: each outer
-    # iteration spawns up to 5 IPOPT fallback calls plus a 3-strategy cascade
-    # restoration, meaning 3000 outer iterations can take days.
     "max_restorations": 50,        # hard cap on total restoration calls per solve
     "restoration_stag_window": 8,  # consecutive restorations with <0.01% comp_res
-                                   # improvement before declaring restoration_stagnation
     "wall_timeout": None,          # per-solve wall-clock budget in seconds (None = unlimited)
     "max_adaptive_jumps": 500,     # hard cap on adaptive_jump regime triggers per solve
-                                   # (prevents indefinite cycling on hard problems)
-    # ── Smart restoration triggering ───────────────────────────────────
-    # Skip restoration when comp_res is already excellent (below this factor * eps_tol).
-    # When comp_res is tiny but sign test fails, the issue is multiplier signs,
-    # not complementarity — restoration won't help and wastes iterations.
     "restoration_comp_factor": 10,  # Only restore if comp_res > factor * eps_tol
-    # ── Phase III guards (Fix 3 & 4) ──────────────────────────────────────────
-    # High-restoration problems (frictionalblock_2, tinloi) converge via restoration
-    # path. Skip aggressive Phase III "final push" strategies to avoid disruption.
     "high_restoration_skip_threshold": 10,  # Skip final push if n_restorations >= this
-    # ── Early-C recovery via bounded Phase II ─────────────────────────────
-    # When Phase I already reaches complementarity feasibility but the sign test
-    # still fails, do not jump straight to certification. A short Phase II sweep
-    # often moves the point to a different basin where Phase III can certify B.
     "early_c_phase2_enabled": True,
     "early_c_phase2_iters_small": 12,
     "early_c_phase2_iters_large": 20,
-    # When the early probe destabilizes a Phase-I-feasible point, spend only a
-    # small recovery budget before falling back to certification/postprocessing.
     "early_probe_phase2_iters_small": 20,
     "early_probe_phase2_iters_medium": 24,
     "early_probe_phase2_iters_large": 12,
@@ -106,13 +62,11 @@ DEFAULT_PARAMS: Dict[str, Any] = {
 
 
 def _safe_obj(problem: Dict[str, Any], z: np.ndarray) -> float:
-    """Evaluate objective function safely, caching the evaluation function."""
+    # Evaluate objective function safely, caching the evaluation function.
     try:
         import casadi as ca
-        # Use the problem's f_fn if available (avoids rebuilding the entire graph)
         if 'f_fn' in problem:
             return float(problem['f_fn'](z))
-        # Fallback: build a minimal evaluation function
         info = problem["build_casadi"](0.0, 0.0, smoothing="product")
         f_fn = ca.Function("f_eval", [info["x"]], [info["f"]])
         return float(f_fn(z))
@@ -121,7 +75,7 @@ def _safe_obj(problem: Dict[str, Any], z: np.ndarray) -> float:
 
 
 def _coerce_kkt_res(value: Any) -> float:
-    """Normalize optional KKT-style diagnostics to a finite float or NaN."""
+    # Normalize optional KKT-style diagnostics to a finite float or NaN.
     try:
         value = float(value)
     except (TypeError, ValueError):
@@ -130,8 +84,7 @@ def _coerce_kkt_res(value: Any) -> float:
 
 
 def _bstat_unsupported_reason(problem: Dict[str, Any]) -> Optional[str]:
-    """Return a reason when the current B-stationarity certificate is unsupported."""
-    # We now properly handle nonstandard bounds in LPEC enumeration
+    # Return a reason when the current B-stationarity certificate is unsupported.
     return None
 
 
@@ -167,7 +120,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
     sign_pass = False
     final_stationarity = "FAIL"
 
-    # ── Recovery-guard state ──────────────────────────────────────────────────
     _wall_timeout             = p.get("wall_timeout", None)
     _max_adaptive_jumps       = int(p.get("max_adaptive_jumps", 500))
     _adaptive_jump_count       = 0
@@ -208,11 +160,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
             "phase_i_result": None,
         }
 
-    # ═══════════════════════════════════════════════════════════════════════════
-    # PHASE I: FIND A STARTING POINT
-    # ═══════════════════════════════════════════════════════════════════════════
-    # Most problems are easier to solve if we start from a point that already 
-    # satisfies some of the "equilibrium" rules. Phase I does exactly this.
     phase_i_result = None
     if p.get("feasibility_phase", True):
         _emit_progress("phase_i_started", force=True, status="running", iteration=0)
@@ -252,20 +199,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
     current_regime = "initial"
     n_comp = int(problem.get("n_comp", 0))
 
-    # ═══════════════════════════════════════════════════════════════════════════
-    # EARLY S-STATIONARITY CHECK AFTER PHASE I
-    # ═══════════════════════════════════════════════════════════════════════════
-    # If Phase I achieved excellent comp_res, check if we're already S-stationary:
-    # 1. Solve one NLP at small t to get multipliers
-    # 2. Check sign test for S-stationarity
-    # 3. If S-stationary (sign test PASSES + comp_res ≤ ε): skip Phase II, go to Phase III
-    # 4. If comp_res ≤ eps_tol but sign test fails: C-stationary, decide Phase II vs III
-    # 5. Otherwise: continue to Phase II
-    #
-    # IMPORTANT: All paths that achieve good comp_res must go through Phase III
-    # for rigorous B-stationarity certification. S-stationarity alone is not enough
-    # because under MPEC-LICQ, S ⟺ B, but we need to verify LICQ holds.
-    # ═══════════════════════════════════════════════════════════════════════════
     _early_check_threshold = eps_tol * 100  # Check if comp_res < 100 * eps_tol
     _skip_phase_ii = False  # Flag to skip Phase II and go directly to Phase III
     _early_n_biactive = 0   # Track biactive count for Phase II vs III decision
@@ -281,7 +214,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
             f"performing early S-stationarity check."
         )
         try:
-            # Solve one NLP at small t to get multipliers for stationarity evaluation
             _early_t = max(prev_comp_res * 0.1, 1e-12)  # Use small t near current residual
             _early_sol = solve_with_solver_fallback(
                 z_k, _early_t, delta_k, problem,
@@ -293,7 +225,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                 _early_z = np.asarray(_early_sol["z_k"]).flatten()
                 _early_comp_res = complementarity_residual(_early_z, problem)
 
-                # Evaluate stationarity with the obtained multipliers
                 _early_stationarity = evaluate_iteration_stationarity(
                     _early_z, _early_sol["lam_g"], problem, _early_sol["problem_info"],
                     n_comp, _early_t, sta_tol, tau
@@ -301,7 +232,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                 _early_sign_pass = bool(_early_stationarity["sign_pass"])
                 _early_n_biactive = int(_early_stationarity.get("n_biactive", 0))
 
-                # Update best if this point is better
                 _early_f = float(_early_sol.get("f_val", _safe_obj(problem, _early_z)))
                 _early_kkt_res = _coerce_kkt_res(_early_sol.get("kkt_res"))
                 if _early_comp_res < best["comp_res"]:
@@ -313,8 +243,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                     current_kkt_res = _early_kkt_res
 
                 if _early_sign_pass and _early_comp_res <= eps_tol:
-                    # S-STATIONARY CANDIDATE: Sign test passes with excellent comp_res
-                    # Skip Phase II, but still need Phase III for B-certification
                     logger.info(
                         f"Early S-stationarity detected: comp_res={_early_comp_res:.3e}, "
                         f"sign_test=PASS, n_biactive={_early_n_biactive} — skipping Phase II, "
@@ -322,11 +250,8 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                     )
                     _skip_phase_ii = True
                     sign_pass = True
-                    # Don't set status=converged yet; Phase III will determine final status
 
                 elif _early_comp_res <= eps_tol and not _early_sign_pass:
-                    # C-STATIONARY: comp_res good but sign test fails.
-                    # Give Phase II a bounded recovery budget before certifying.
                     _early_requires_phase_ii = True
                     z_k = _early_z.copy()
                     prev_comp_res = _early_comp_res
@@ -363,7 +288,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                                 f"Running Phase II to attempt sign test pass or reduce biactive set."
                             )
                 else:
-                    # comp_res not yet good enough, continue to Phase II
                     _early_requires_phase_ii = True
                     z_k = _early_z.copy()
                     prev_comp_res = _early_comp_res
@@ -447,16 +371,12 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                         int(p.get("early_probe_phase2_iters_small", 20)),
                     )
 
-    # Pre-loop convergence check: Phase I sometimes drives comp_res below eps_tol
-    # on its own, but we still need Phase III to certify B-stationarity.
     if (
         not _skip_phase_ii
         and not _force_phase_ii
         and not _early_requires_phase_ii
         and prev_comp_res <= eps_tol
     ):
-        # comp_res is good but we didn't do the early sign test check above
-        # This means sign_pass status is unknown - need Phase III
         logger.info(
             f"Phase I achieved comp_res={prev_comp_res:.3e} <= eps_tol={eps_tol:.0e}; "
             f"skipping Phase II outer loop, proceeding to Phase III."
@@ -471,8 +391,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
             best_comp_res=best["comp_res"],
         )
 
-    # Phase II initialization: if Phase I nearly solved the problem, fast-forward t_k
-    # to avoid destroying the refined point.
     if not _skip_phase_ii and p.get("adaptive_t", True) and prev_comp_res < t_k:
         fast_forward_t = max(prev_comp_res * 10.0, eps_tol * tau)
         if fast_forward_t < t_k:
@@ -482,16 +400,7 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
             )
             t_k = fast_forward_t
 
-    # ═══════════════════════════════════════════════════════════════════════════
-    # PHASE II: THE MAIN SOLVING LOOP (HOMOTOPY)
-    # ═══════════════════════════════════════════════════════════════════════════
-    # This is the "Iterative Sharpening" process. We solve a series of simpler
-    # problems, gradually making them more like the original hard problem.
     for k in range(_phase2_iter_limit if not _skip_phase_ii else 0):
-        # ── Wall-clock guard ──────────────────────────────────────────────────
-        # Checked BEFORE each NLP solve so we exit cleanly rather than mid-solve.
-        # This fires when individual iterations are slow (large problems, many
-        # fallbacks) and the process-level timeout hasn't been reached yet.
         if _wall_timeout is not None:
             _elapsed = time.perf_counter() - total_start
             if _elapsed > _wall_timeout:
@@ -522,13 +431,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
         solver_kkt_res = _coerce_kkt_res(sol.get("kkt_res"))
 
         if not is_solver_success(solver_status):
-            # Save final failure log before breaking.
-            # Still update best with the pre-crash warm-start point z_k:
-            # the current z_k was good enough to warm-start this iteration,
-            # so its comp_res (prev_comp_res) is the best we know about.
-            # This lets the post-loop best-point check rescue problems where
-            # IPOPT diverges right at the end (e.g. ex9.1.1, ex9.1.6, monteiro)
-            # but the warm-start point already satisfied comp_res <= eps_tol.
             if prev_comp_res < best["comp_res"]:
                 best = {"z": z_k.copy(), "f": _safe_obj(problem, z_k),
                         "comp_res": prev_comp_res, "kkt_res": current_kkt_res, "iter": k + 1,
@@ -543,25 +445,18 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
             status = "nlp_failure"  # Underlying IPOPT/SQP returned non-success
             break
 
-        # Evaluate stationarity
         stationarity = evaluate_iteration_stationarity(
             z_new, sol["lam_g"], problem, sol["problem_info"], n_comp, t_k, sta_tol, tau
         )
         sign_pass = bool(stationarity["sign_pass"])
-        # Use macmpec_loader (max|G*H|) for consistency with final reported value;
-        # sign_test.py uses mpeclib_loader (min(|G|,|H|)) which is stricter.
         comp_res = float(complementarity_residual(z_new, problem))
         f_val = float(sol["f_val"])
         point_kkt_res = solver_kkt_res
 
-        # Track best point encountered
         if (comp_res < best["comp_res"]) or (comp_res <= best["comp_res"] and f_val < best["f"]):
             best = {"z": z_new.copy(), "f": f_val, "comp_res": comp_res, "kkt_res": point_kkt_res, "iter": k + 1,
                     "sign_pass": sign_pass}
 
-        # The official April 11 paper run never invoked restoration. We keep
-        # the restoration-related log fields for schema compatibility, but the
-        # Phase II solver now records them as inactive and continues directly.
         restoration_used = "none"
 
         log = IterationLog(
@@ -583,7 +478,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
             lambda_G=None,
             lambda_H=None,
         )
-        # Store lambda bounds for diagnostics without keeping full arrays
         if stationarity.get("lambda_G") is not None:
             lG = np.asarray(stationarity["lambda_G"])
             log.lambda_G_min = float(np.min(lG)) if len(lG) > 0 else 0.0
@@ -609,8 +503,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                     "sign_pass": True}
             z_k = z_new
             current_kkt_res = point_kkt_res
-            # S-stationary candidate found in Phase II
-            # Don't set final status yet - Phase III will certify B-stationarity
             logger.info(
                 f"[iter {k+1}] S-stationarity achieved: comp_res={comp_res:.3e}, sign_pass=True. "
                 f"Proceeding to Phase III for B-certification."
@@ -618,14 +510,11 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
             _skip_phase_ii = True  # Exit loop and go to Phase III
             break
 
-        # Compute next t and regime
         t_k, stagnation_count, tracking_count, current_regime = compute_next_t(
             p, t_k, kappa, comp_res, prev_comp_res, stagnation_count,
             tracking_count, stationarity["n_biactive"], k, bool(p.get("adaptive_t", True)), p.get("stagnation_window", 10), logs
         )
 
-        # ── Adaptive-jump budget guard ────────────────────────────────────────
-        # Track adaptive_jump triggers and cap to prevent infinite cycling
         if current_regime == 'adaptive_jump':
             _adaptive_jump_count += 1
             if _adaptive_jump_count >= _max_adaptive_jumps:
@@ -640,13 +529,10 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                 status = "stagnation"  # Adaptive jumps exhausted without convergence
                 break
 
-        # t_k floor: below ~1e-14 the smoothed NLP is numerically identical to t=0
         _T_FLOOR = 1e-14
         if t_k < _T_FLOOR:
             t_k = _T_FLOOR
 
-        # Floor stagnation early exit: if t_k is clamped and comp_res hasn't changed,
-        # every future NLP solve is numerically identical.
         _FLOOR_STAG_WINDOW = 20
         if t_k == _T_FLOOR and len(logs) >= _FLOOR_STAG_WINDOW:
             recent_cr = [l.comp_res for l in logs[-_FLOOR_STAG_WINDOW:]]
@@ -662,7 +548,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
         prev_comp_res = comp_res
         current_kkt_res = point_kkt_res
 
-    # Post-loop: Check if best point has good comp_res (even if sign test unknown)
     if best["comp_res"] <= eps_tol:
         logger.info(
             f"Best point has comp_res={best['comp_res']:.3e} <= eps_tol={eps_tol:.0e}; "
@@ -671,12 +556,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
         z_k = best["z"]
         current_kkt_res = best["kkt_res"]
 
-    # ═══════════════════════════════════════════════════════════════════════════
-    # PHASE III: THE FINAL POLISH & CERTIFICATION
-    # ═══════════════════════════════════════════════════════════════════════════
-    # We found a potential solution! Now we perform a clinical check to see
-    # exactly how good it is. We check for "B-stationarity" which is a 
-    # gold standard for this type of math.
     b_stationarity_certified = None
     lpec_obj_val = None
     licq_holds_flag = None
@@ -712,8 +591,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                 )
 
             if licq_holds_flag and best_sign_pass and bstat_support_reason is None:
-                # Under MPEC-LICQ: S-stationary ⟺ B-stationary
-                # Sign test passed, so this point is both S and B stationary
                 logger.info(
                     f"Phase III: MPEC-LICQ holds AND sign_pass=True. "
                     f"Under LICQ, S ⟺ B. Certifying as B-stationary."
@@ -733,8 +610,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                 z_k = z_best
                 current_kkt_res = best["kkt_res"]
             else:
-                # Either LICQ fails OR sign_pass is False
-                # Must run full LPEC enumeration to check B-stationarity
                 reason = "LICQ fails" if not licq_holds_flag else "sign_pass=False (C-stationary)"
                 logger.info(
                     f"Phase III: {reason}. Running LPEC enumeration for B-stationarity..."
@@ -747,7 +622,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                     tol=eps_tol
                 )
                 b_stationarity_certified = is_bstat
-                # Update bstat_details with LICQ info
                 if bstat_details:
                     bstat_details['licq_holds'] = licq_holds_flag
                     bstat_details['licq_rank'] = licq_rank
@@ -762,13 +636,8 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                     z_k = z_best
                     current_kkt_res = best["kkt_res"]
                 elif b_stationarity_certified is False:
-                    # Not B-stationary: descent direction exists
                     sign_pass = False
                     if best_sign_pass:
-                        # Sign test passed but LPEC found descent direction.
-                        # Since S ⊆ B always (Scheel & Scholtes 2000), a point that
-                        # is NOT B-stationary CANNOT be S-stationary. The sign test
-                        # is unreliable under LICQ failure (multipliers non-unique).
                         logger.warning(
                             f"Phase III: sign_pass=True but LPEC found descent (obj={lpec_obj_val:.3e}). "
                             f"LICQ={licq_holds_flag}. Since S⊆B and point is not B-stat, "
@@ -779,7 +648,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                         z_k = z_best
                         current_kkt_res = best["kkt_res"]
                     else:
-                        # C-stationary but not B-stationary
                         logger.warning(
                             f"Phase III: C-stationary but NOT B-stationary (LPEC obj={lpec_obj_val:.3e}). "
                             f"LICQ={licq_holds_flag}."
@@ -810,29 +678,9 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
             b_stationarity_certified = None
             bstat_details = {'error': str(e), 'lpec_status': 'exception'}
     else:
-        # comp_res > eps_tol: Did not achieve complementarity feasibility directly
-        # ═══════════════════════════════════════════════════════════════════════════
-        # FINAL PUSH: MULTI-STRATEGY REFINEMENT FOR NEAR-MISS CASES
-        # ═══════════════════════════════════════════════════════════════════════════
-        # When comp_res is close to eps_tol (within 1000x), the point is nearly
-        # complementarity-feasible. We try multiple strategies to push it below:
-        #
-        # Strategy 1: Ultra-small t NLP solve - reduce comp_res via homotopy
-        # Strategy 2: BNLP polish with active set - clean NLP without comp products
-        # Strategy 3: Partition flipping for biactive indices
-        #
-        # This recovers many problems that otherwise fail due to slight numerical
-        # imprecision in the homotopy, e.g.:
-        #   - comp_res=3.761e-08 vs eps_tol=1e-08 (only 3.7x away)
-        #   - comp_res=5.673e-08 vs eps_tol=1e-08 (only 5.6x away)
-        # ═══════════════════════════════════════════════════════════════════════════
         _final_push_threshold = eps_tol * 1000  # Try if within 1000x of tolerance
         _final_push_attempted = False
 
-        # ── Fix 4: Guard against Phase III interference with high-restoration paths ──
-        # Problems with many restorations (e.g., frictionalblock_2, tinloi) were
-        # converging via the restoration mechanism. Aggressive "final push" strategies
-        # can disrupt this working path. Skip final push for high-restoration problems.
         _high_restoration_threshold = int(p.get("high_restoration_skip_threshold", 10))
         _skip_final_push_high_restorations = total_restorations >= _high_restoration_threshold
 
@@ -852,10 +700,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
             z_best = best["z"]
             f_best = best["f"]
 
-            # ── Strategy 1: Gentle t reduction (NOT ultra-small) ─────────────────
-            # Try slightly smaller t values to nudge comp_res down.
-            # IMPORTANT: Don't go too small - that makes the NLP ill-conditioned
-            # and can cause the solver to diverge to a worse solution.
             logger.info("Final push Strategy 1: Gentle t reduction")
             _t_reduction_factors = [0.5, 0.1, 0.01]  # Gradually reduce, not jump to 1e-14
             _last_good_t = best["comp_res"] * 10  # Approximate current homotopy t
@@ -876,7 +720,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                         _ultra_comp = complementarity_residual(_ultra_z, problem)
                         _ultra_f = float(_ultra_sol.get("f_val", _safe_obj(problem, _ultra_z)))
 
-                        # Warm-start divergence protection: reject if solution moved too far
                         _displacement = np.linalg.norm(_ultra_z - z_best)
                         _z_norm = max(np.linalg.norm(z_best), 1.0)
                         if _displacement > 10.0 * _z_norm:
@@ -884,7 +727,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                             break
 
                         logger.info(f"  t={_try_t:.1e}: comp_res={_ultra_comp:.3e} (was {best['comp_res']:.3e})")
-                        # Only accept if it actually improved
                         if _ultra_comp < best["comp_res"] * 0.99:  # At least 1% improvement
                             z_best = _ultra_z.copy()
                             f_best = _ultra_f
@@ -899,7 +741,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                     logger.debug(f"  t={_try_t:.1e}: solve failed: {e}")
                     break  # Stop if solver fails
 
-            # Check if Strategy 1 succeeded
             if best["comp_res"] <= eps_tol:
                 logger.info(f"Final push Strategy 1 SUCCESS: comp_res={best['comp_res']:.3e}")
                 z_k = best["z"]
@@ -907,9 +748,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                 final_stationarity = "C"  # Conservative; sign test needed
                 bstat_details = {'final_push': True, 'strategy': 'ultra_small_t'}
             else:
-                # ── Strategy 2: BNLP polish with multiple active-set tolerances ─────
-                # The BNLP can fail if active-set identification is wrong.
-                # Try progressively tighter tolerances to find one that works.
                 logger.info("Final push Strategy 2: BNLP polish with multiple tolerances")
                 try:
                     _bnlp_tolerances = [best["comp_res"] * 10, best["comp_res"], 1e-6, 1e-8]
@@ -928,7 +766,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                             comp_res_polish = complementarity_residual(z_polish, problem)
                             f_polish = bnlp_result['f_val']
 
-                            # Warm-start divergence protection: reject if solution moved too far
                             _displacement = np.linalg.norm(z_polish - z_best)
                             _z_norm = max(np.linalg.norm(z_best), 1.0)
                             if _displacement > 10.0 * _z_norm:
@@ -954,7 +791,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                         else:
                             logger.info(f"    BNLP failed: {bnlp_result['status']}")
 
-                    # Update best if BNLP improved
                     if _best_bnlp_result is not None and _best_bnlp_result['comp_res'] < best["comp_res"]:
                         z_best = _best_bnlp_result['z'].copy()
                         f_best = _best_bnlp_result['f']
@@ -962,10 +798,8 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                                 "comp_res": _best_bnlp_result['comp_res'], "kkt_res": _best_bnlp_result['kkt_res'], "iter": best["iter"],
                                 "sign_pass": None}
 
-                    # ── Strategy 3: Partition flipping ─────────────────────────────
                     if best["comp_res"] > eps_tol and len(_best_I_biactive) > 0:
                         logger.info("Final push Strategy 3: Partition flipping for biactive indices")
-                        # Re-identify active set at best tolerance
                         I1, I2, I_biactive, I3 = identify_active_set(z_best, problem, tol=max(best["comp_res"] * 10, 1e-8))
                         I1_set = set(I1)
 
@@ -996,13 +830,11 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                 except Exception as e:
                     logger.warning(f"Final push Strategy 2/3 failed: {e}")
 
-                # Final check after all strategies
                 if best["comp_res"] <= eps_tol:
                     logger.info(f"Final push SUCCESS: comp_res={best['comp_res']:.3e} <= eps_tol")
                     z_k = best["z"]
                     current_kkt_res = best["kkt_res"]
 
-                    # Try to certify stationarity type
                     try:
                         if bstat_support_reason is None:
                             licq_holds_flag, licq_rank, n_active, licq_details = check_mpec_licq(z_k, problem)
@@ -1017,7 +849,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                                 f"B-stationarity certificate does not support {bstat_support_reason}."
                             )
 
-                        # Get multipliers for sign test
                         _tiny_t = max(best["comp_res"] * 0.1, 1e-14)
                         _tiny_sol = solve_with_solver_fallback(
                             z_k, _tiny_t, delta_k, problem,
@@ -1067,7 +898,6 @@ def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[st
                         final_stationarity = "FAIL"
                         bstat_details = {'final_push': True, 'lpec_status': 'exception', 'error': str(e)}
 
-        # If final push didn't succeed, mark as comp_infeasible
         if best["comp_res"] > eps_tol and status != "converged":
             logger.warning(
                 f"Phase III skipped: comp_res={best['comp_res']:.3e} > eps_tol={eps_tol:.0e}. "

@@ -1,15 +1,4 @@
-"""
-The Adaptive Accelerator: Deciding how fast to "Sharpen" the problem.
-
-In Phase II, we use a smoothing parameter 't'. As 't' gets smaller, 
-the problem gets sharper and more accurate. 
-
-This module is like the "Automatic Transmission" of the solver. It decides 
-whether to:
-1. Speed up (decrease 't' quickly) if things are going well.
-2. Slow down if the solver is struggling.
-3. "Jump" to a different setting if we get stuck (stagnation).
-"""
+# The Adaptive Accelerator: Deciding how fast to "Sharpen" the problem.
 
 from typing import Any, Dict, List, Tuple
 import numpy as np
@@ -23,24 +12,15 @@ _STAGNATION_THRESHOLD = 0.05
 
 def compute_next_t(p, t_k, kappa, comp_res, prev_comp_res, stagnation_count, tracking_count, 
                    n_biactive, k, adaptive_t, stagnation_window, logs):
-    """
-    Compute next smoothing parameter t_{k+1} and regime label.
-
-    Returns
-    -------
-    t_next, stagnation_count, tracking_count, regime
-    """
-    # Compute improvement ratio
+    # Compute next smoothing parameter t_{k+1} and regime label.
     denom = max(prev_comp_res, np.finfo(float).tiny)
     improvement = (prev_comp_res - comp_res) / denom
     
-    # Safety: NaN fallback uses conservative slow regime
     if np.isnan(comp_res) or np.isnan(prev_comp_res):
         regime = 'slow'
         t_new = kappa * t_k
         return t_new, stagnation_count, tracking_count, regime
     
-    # Check for stagnation
     if stagnation_window is None:
         stagnation_window = 10
     
@@ -49,7 +29,6 @@ def compute_next_t(p, t_k, kappa, comp_res, prev_comp_res, stagnation_count, tra
     else:
         stagnation_count = 0
     
-    # Check if biactive set is stable over recent iterations
     biactive_stable = False
     if len(logs) >= 3:
         biactive_stable = all(
@@ -57,7 +36,6 @@ def compute_next_t(p, t_k, kappa, comp_res, prev_comp_res, stagnation_count, tra
             for i in range(max(0, len(logs) - 3), len(logs))
         )
     
-    # Tracking mode: activated when biactive set is stable and improving
     tracking = False
     if adaptive_t and biactive_stable and k >= _TRACKING_MIN_ITER:
         if _TRACKING_LOWER <= improvement <= _TRACKING_UPPER:
@@ -67,9 +45,6 @@ def compute_next_t(p, t_k, kappa, comp_res, prev_comp_res, stagnation_count, tra
         else:
             tracking_count = max(0, tracking_count - 1)
     
-    # ══════════════════════════════════════════════════════════════════════════
-    # THE FIVE GEARS OF THE SOLVER (REGIMES)
-    # ══════════════════════════════════════════════════════════════════════════
     if tracking and improvement > 0.5:
         regime = 'superlinear'  # Top Gear: Extreme speed.
         t_new = kappa * kappa * t_k

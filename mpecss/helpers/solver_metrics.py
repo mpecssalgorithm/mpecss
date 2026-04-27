@@ -1,9 +1,4 @@
-"""
-Shared solver diagnostics helpers.
-
-These helpers normalize solver-specific optimality/feasibility diagnostics into
-the single ``kkt_res`` scalar used throughout benchmark rows and audit traces.
-"""
+# Shared solver diagnostics helpers.
 
 from __future__ import annotations
 
@@ -13,7 +8,7 @@ import numpy as np
 
 
 def combine_kkt_residuals(*terms: Any) -> float:
-    """Return a single residual from any finite optimality/feasibility terms."""
+    # Return a single residual from any finite optimality/feasibility terms.
     values = []
     for term in terms:
         if term is None:
@@ -28,7 +23,7 @@ def combine_kkt_residuals(*terms: Any) -> float:
 
 
 def _last_finite_scalar(value: Any) -> float | None:
-    """Extract the last finite scalar from an IPOPT iteration trace field."""
+    # Extract the last finite scalar from an IPOPT iteration trace field.
     if value is None:
         return None
     try:
@@ -42,13 +37,7 @@ def _last_finite_scalar(value: Any) -> float | None:
 
 
 def extract_ipopt_kkt_res(stats: Mapping[str, Any] | None) -> float:
-    """
-    Build a scalar KKT-style residual from IPOPT iteration traces.
-
-    IPOPT exposes the last primal and dual infeasibilities in
-    ``stats()["iterations"]``. We collapse those to a single conservative
-    residual by taking the max of the available terms.
-    """
+    # Build a scalar KKT-style residual from IPOPT iteration traces.
     if not stats:
         return float("nan")
     iterations = stats.get("iterations")

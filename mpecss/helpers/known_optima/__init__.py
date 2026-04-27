@@ -1,4 +1,3 @@
-# Known optima subpackage - provides benchmark reference values
 from .macmpec import (
     KNOWN_OPTIMA,
     RED_FLAG_PROBLEMS,

@@ -1,10 +1,4 @@
-"""
-The "Problem Translator" (MPECLib): Turning libraries into math.
-
-MPECLib is another big library of complementarity problems. 
-This module reads the specialized JSON files and prepares 
-them for the MPECSS solver.
-"""
+# The "Problem Translator" (MPECLib): Turning libraries into math.
 import glob
 import json
 import logging
@@ -20,7 +14,6 @@ logger = logging.getLogger('mpecss.problems')
 _BIG = 1e20
 _X0_PERTURBATION = 0.01
 
-# FIX #7: was annotated as `str`; correct type is List[Tuple[str, str]]
 _FAMILY_PATTERNS: List[Tuple[str, str]] = [
     ('^aampec', 'aampec'),
     ('^bard', 'bard'),
@@ -105,7 +98,7 @@ def _load_complementarity_bounds(data: dict):
 
 
 def _tighten_linear_bounds(problem_name, n_x, n_comp, w0, lbx, G_fn, H_fn, lbG_eff, lbH_eff):
-    """Try to infer tighter variable lower bounds from simple linear rows in G/H."""
+    # Try to infer tighter variable lower bounds from simple linear rows in G/H.
     if n_x > 2000:
         return 0
     tightened = 0
@@ -140,18 +133,7 @@ def _tighten_linear_bounds(problem_name, n_x, n_comp, w0, lbx, G_fn, H_fn, lbG_e
 
 
 def load_mpeclib(filepath: str) -> Dict[str, Any]:
-    """
-    Load one MPECLib problem from a .nl.json file.
-
-    Returns a problem dict compatible with all MPECSS phases:
-      name, n_x, n_comp, n_con, n_p, family
-      x0_fn(seed) -> np.ndarray
-      build_casadi(t_k, delta_k, smoothing) -> NLP subproblem dict
-      G_fn, H_fn
-      lbx, ubx
-      lbG_eff, lbH_eff
-      _source_path
-    """
+    # Load one MPECLib problem from a .nl.json file.
     if not os.path.isfile(filepath):
         raise FileNotFoundError('MPECLib benchmark file not found: ' + filepath)
 
@@ -192,13 +174,10 @@ def load_mpeclib(filepath: str) -> Dict[str, Any]:
     ubG_finite = [(i, ubG_fin[i]) for i in range(n_comp) if ubG_fin[i] < _BIG]
     ubH_finite = [(i, ubH_fin[i]) for i in range(n_comp) if ubH_fin[i] < _BIG]
 
-    # Redefine what is "unsupported" based on finiteness, not just being 0.0
     G_is_free = [
         _is_free_lower(raw_lbG_values[i] if i < len(raw_lbG_values) else 0.0)
         for i in range(n_comp)
     ]
-    # We only reject if lbH is -inf (truly free/negative without a bound),
-    # because the homotopy model G*H <= t requires H >= 0 (after shifting).
     H_is_truly_free = [
         _is_free_lower(raw_lbH_values[i] if i < len(raw_lbH_values) else 0.0)
         for i in range(n_comp)
@@ -269,7 +248,11 @@ def load_mpeclib(filepath: str) -> Dict[str, Any]:
             lbg_parts.extend(lbg_orig)
             ubg_parts.extend(ubg_orig)
 
-        bounded_idx = [i for i in range(n_comp) if not G_is_free[i]]
+        ubH_idx = {i for i, _ in ubH_finite}
+        bounded_idx = [
+            i for i in range(n_comp)
+            if (not G_is_free[i]) or (i not in ubH_idx)
+        ]
         if bounded_idx:
             g_parts.append(ca.vcat([G_shifted[i] + delta_k for i in bounded_idx]))
             lbg_parts.extend([0.0] * len(bounded_idx))
@@ -307,9 +290,6 @@ def load_mpeclib(filepath: str) -> Dict[str, Any]:
 
         g = ca.vertcat(*g_parts)
 
-        # Layout offsets for extract_multipliers.
-        # Standard layout: [n_orig_con | n_bounded_G | n_comp | n_comp]
-        # Box-MCP layout:  [n_orig_con | n_bounded_G | n_comp | n_ubH | n_ubH | n_comp]
         off_G_lb = n_con
         off_H_lb = off_G_lb + len(bounded_idx)
         off_ubH_lb = off_H_lb + n_comp
@@ -321,7 +301,6 @@ def load_mpeclib(filepath: str) -> Dict[str, Any]:
             'lbg': lbg_parts, 'ubg': ubg_parts,
             'lbx': lbx, 'ubx': ubx,
             'n_comp': n_comp, 'n_orig_con': n_con,
-            # Layout offsets:
             'n_bounded_G': len(bounded_idx),
             'n_ubH':       len(ubH_finite),
             'off_G_lb':    off_G_lb,
@@ -357,7 +336,7 @@ def load_mpeclib(filepath: str) -> Dict[str, Any]:
 
 
 def load_mpeclib_batch(directory: str, pattern: str = '*.json') -> List[Dict[str, Any]]:
-    """Load all MPECLib problems from a directory."""
+    # Load all MPECLib problems from a directory.
     files = sorted(glob.glob(os.path.join(directory, pattern)))
     problems = []
     for file_path in files:
@@ -370,15 +349,7 @@ def load_mpeclib_batch(directory: str, pattern: str = '*.json') -> List[Dict[str
 
 
 def get_mpeclib_problem(name: str, mpeclib_dir: str = None) -> Dict[str, Any]:
-    """
-    Get one MPECLib problem by full path or by benchmark name.
-
-    Examples
-    --------
-    get_mpeclib_problem("bard1")
-    get_mpeclib_problem("bard1.nl.json")
-    get_mpeclib_problem("/abs/path/to/bard1.nl.json")
-    """
+    # Get one MPECLib problem by full path or by benchmark name.
     if os.path.isfile(name):
         return load_mpeclib(name)
 
@@ -397,7 +368,7 @@ def get_mpeclib_problem(name: str, mpeclib_dir: str = None) -> Dict[str, Any]:
 
 
 def evaluate_GH(x: np.ndarray, problem: Dict[str, Any]) -> Tuple[np.ndarray, np.ndarray]:
-    """Evaluate G(x) and H(x) for a loaded MPECLib problem."""
+    # Evaluate G(x) and H(x) for a loaded MPECLib problem.
     G = np.asarray(problem['G_fn'](x)).flatten()
     H = np.asarray(problem['H_fn'](x)).flatten()
     return G, H

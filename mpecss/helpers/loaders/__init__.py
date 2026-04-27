@@ -1,4 +1,3 @@
-# Loaders subpackage
 from .macmpec_loader import (
     load_macmpec,
     load_macmpec_batch,

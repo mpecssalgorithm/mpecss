@@ -1,4 +1,4 @@
-"""Public helper exports for MPECSS."""
+# Public helper exports for MPECSS.
 
 from mpecss.helpers.loaders import (
     load_macmpec,

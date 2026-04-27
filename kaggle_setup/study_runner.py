@@ -29,6 +29,8 @@ def build_resumable_command(
     problem_list: str | None = None,
     num_problems: int | None = None,
     solver_params: Mapping[str, Any] | None = None,
+    resume_csv: str | None = None,
+    resume_search_dir: str | None = None,
     resume_latest: bool = False,
     retry_failed: bool = False,
     summary_only: bool = False,
@@ -70,6 +72,10 @@ def build_resumable_command(
     solver_params_json = _solver_params_json(solver_params)
     if solver_params_json:
         command.extend(["--solver-params-json", solver_params_json])
+    if resume_csv:
+        command.extend(["--resume-csv", resume_csv])
+    if resume_search_dir:
+        command.extend(["--resume-search-dir", resume_search_dir])
     if resume_latest or retry_failed:
         command.append("--resume-latest")
     if retry_failed:
@@ -95,6 +101,8 @@ def run_study_plan(
     problem: str | None = None,
     problem_list: str | None = None,
     num_problems: int | None = None,
+    resume_csv: str | None = None,
+    resume_search_dir: str | None = None,
     resume_latest: bool = False,
     retry_failed: bool = False,
     summary_only: bool = False,
@@ -124,6 +132,8 @@ def run_study_plan(
             problem_list=problem_list,
             num_problems=num_problems,
             solver_params=solver_params,
+            resume_csv=resume_csv,
+            resume_search_dir=resume_search_dir,
             resume_latest=resume_latest,
             retry_failed=retry_failed,
             summary_only=summary_only,

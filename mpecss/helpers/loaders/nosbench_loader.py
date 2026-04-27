@@ -1,10 +1,4 @@
-"""
-The "Problem Translator" (NOSBENCH): Turning NOSBench into math.
-
-NOSBench is a set of nonlinear optimization problems. 
-This module translates these specific files so the 
-MPECSS solver can work its magic on them.
-"""
+# The "Problem Translator" (NOSBENCH): Turning NOSBench into math.
 
 from __future__ import annotations
 
@@ -72,21 +66,16 @@ def load_nosbench(filepath: str) -> Dict[str, Any]:
     if f_fn is None or G_fn is None or H_fn is None:
         raise ValueError(f"Invalid NOSBENCH JSON (missing serialized functions): {filepath}")
 
-    # Derive n_comp from G_fn output dimension, NOT from lbG array length.
-    # NOSBench JSONs often have empty lbG/lbH arrays but valid G_fn/H_fn functions.
     n_comp = G_fn.size_out(0)[0]
 
-    # Derive n_con from g_fn output dimension if it exists.
     n_con = g_fn.size_out(0)[0] if g_fn is not None else 0
 
     raw_lbg = data.get("lbg", [])
     raw_ubg = data.get("ubg", [])
     
-    # Defaults for general constraints g(x) <= 0: lbg=-inf, ubg=0
     lbg = _sanitize_bounds(raw_lbg, -_BIG) if raw_lbg else [-_BIG] * n_con
     ubg = _sanitize_bounds(raw_ubg, 0.0) if raw_ubg else [0.0] * n_con
     
-    # Default lbG/lbH to zeros of correct length if not provided or empty
     raw_lbG = data.get("lbG", [])
     raw_lbH = data.get("lbH", [])
     lbG = _sanitize_bounds(raw_lbG, 0.0) if raw_lbG else [0.0] * n_comp
