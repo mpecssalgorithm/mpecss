@@ -1,21 +1,21 @@
 # The Universal Translator: Connecting our math to the computer's brain.
 
 import casadi as ca
-from mpecss.helpers.solver_cache import clear_solver_cache, build_problem
-from mpecss.helpers.solver_ipopt import (
+from mpecss.helpers.solver.solver_cache import clear_solver_cache, build_problem
+from mpecss.helpers.solver.solver_ipopt import (
     solve_smooth_subproblem,
     is_solver_success,
     solve_with_solver_fallback,
     DEFAULT_IPOPT_OPTS,
 )
-from mpecss.helpers.solver_acceleration import (
+from mpecss.helpers.solver.solver_acceleration import (
     select_nlp_solver,
     select_linear_solver_oss,
     is_sqp_recommended,
 )
 
 try:
-    from mpecss.helpers.solver_sqp import (
+    from mpecss.helpers.solver.solver_sqp import (
         SQPSolver,
         solve_nlp_sqp,
         QPOASES_AVAILABLE,

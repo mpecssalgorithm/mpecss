@@ -15,15 +15,3 @@ from mpecss.helpers.loaders import (
     load_mpeclib_batch,
     get_mpeclib_problem,
 )
-from mpecss.helpers.known_optima import (
-    KNOWN_OPTIMA,
-    RED_FLAG_PROBLEMS,
-    get_known_optimum,
-    compute_optimality_gap,
-    DEFAULT_REFERENCE_FILENAME,
-    load_reference,
-    get_reference_path,
-    get_known_optimum_nosbench,
-    compute_optimality_gap_nosbench,
-    set_reference_dict,
-)

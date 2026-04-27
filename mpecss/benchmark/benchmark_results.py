@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional, Callable
 
 import numpy as np
 
-from mpecss.helpers.benchmark_audit import _point_fingerprint, _json_safe
+from mpecss.benchmark.benchmark_audit import _point_fingerprint, _json_safe
 
 
 def _summarize_result_state(result: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:

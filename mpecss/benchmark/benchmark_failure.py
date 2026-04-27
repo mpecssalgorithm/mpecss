@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from typing import Dict, Any, Optional, Callable
 
-from mpecss.helpers.benchmark_results import _apply_raw_summary_columns
+from mpecss.benchmark.benchmark_results import _apply_raw_summary_columns
 
 
 def _classify_problem_size(n_x: int) -> str:

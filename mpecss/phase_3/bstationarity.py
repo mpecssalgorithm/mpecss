@@ -6,6 +6,7 @@ from typing import Dict, Any, Optional, Tuple, List
 from collections import OrderedDict
 import numpy as np
 import casadi as ca
+from mpecss.contracts import ProblemSpec
 from mpecss.helpers.comp_residuals import complementarity_residual, mcp_feasibility_residual
 
 logger = logging.getLogger('mpecss.bstationarity')
@@ -61,11 +62,11 @@ def clear_jacobian_cache():
     _JACOBIAN_CACHE.clear()
 
 
-def _unsupported_certificate_reason(problem: Dict[str, Any]) -> Optional[str]:
+def _unsupported_certificate_reason(problem: ProblemSpec) -> Optional[str]:
     return None
 
 
-def _compute_jacobians(z, problem):
+def _compute_jacobians(z: np.ndarray, problem: ProblemSpec):
     # Compute Jacobians of f, g_orig, G, H at point z.
     n_x = problem['n_x']
     z = np.asarray(z).flatten()
@@ -120,7 +121,7 @@ def _compute_jacobians(z, problem):
     return grad_f, J_g, J_G, J_H
 
 
-def _classify_complementarity_indices(z, problem, tol=_ACTIVE_TOL):
+def _classify_complementarity_indices(z: np.ndarray, problem: ProblemSpec, tol: float = _ACTIVE_TOL):
     # Classify complementarity indices into active sets.
     from mpecss.helpers.loaders.macmpec_loader import evaluate_GH
     G, H = evaluate_GH(z, problem)
@@ -177,7 +178,7 @@ def _classify_complementarity_indices(z, problem, tol=_ACTIVE_TOL):
     return I_G, I_H, I_ubH, I_B_lower, I_B_upper, I_free
 
 
-def check_mpec_licq(z, problem, tol=_LICQ_TOL):
+def check_mpec_licq(z: np.ndarray, problem: ProblemSpec, tol: float = _LICQ_TOL):
     # Step 1: The "Shortcut" (LICQ Check).
     grad_f, J_g, J_G, J_H = _compute_jacobians(z, problem)
     I_G, I_H, I_ubH, I_B_lower, I_B_upper, I_free = _classify_complementarity_indices(z, problem, tol=_ACTIVE_TOL)

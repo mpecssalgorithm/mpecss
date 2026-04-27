@@ -2,7 +2,7 @@
 """
 Kaggle-friendly resumable benchmark wrapper.
 
-Thin wrapper over mpecss.helpers.benchmark_utils.run_benchmark_main.
+Thin wrapper over mpecss.benchmark.benchmark_utils.run_benchmark_main.
 Adds Kaggle-specific features:
   --resume-latest   Find the most recent CSV under --resume-search-dir or /kaggle/input
   --resume-csv      Resume from an explicit CSV path (for example from /kaggle/input)
@@ -24,6 +24,7 @@ import os
 import shutil
 import sys
 import logging
+from datetime import datetime
 from pathlib import Path
 
 logger = logging.getLogger("kaggle_resumable")
@@ -101,9 +102,49 @@ def _has_output_artifacts(results_dir: str) -> bool:
     return root.exists() and any(path.is_file() for path in root.rglob("*"))
 
 
-def _bundle_results(results_dir: str) -> str:
-    """Create a zip archive next to the results directory."""
-    archive_path = shutil.make_archive(results_dir, "zip", root_dir=results_dir)
+def _sanitize_name_component(value: str) -> str:
+    """Sanitize text for filesystem-friendly archive names."""
+    text = "".join(ch if (ch.isalnum() or ch in ("-", "_")) else "_" for ch in str(value))
+    text = text.strip("_")
+    return text or "run"
+
+
+def _build_bundle_base_name(
+    results_dir: str,
+    dataset_tag: str,
+    tag: str,
+    resume_csv: str | None,
+    retry_failed: bool,
+) -> str:
+    """Build archive basename from run context."""
+    latest_csv = _find_latest_csv(results_dir, dataset_tag)
+    if latest_csv:
+        # Keep bundle name aligned with the produced benchmark CSV.
+        archive_stem = f"{Path(latest_csv).stem}_artifacts"
+    else:
+        mode = "retry" if retry_failed else ("resumed" if resume_csv else "fresh")
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        archive_stem = f"{dataset_tag}_full_{_sanitize_name_component(tag)}_{ts}_{mode}_artifacts"
+
+    return str(Path(results_dir).parent / archive_stem)
+
+
+def _bundle_results(
+    results_dir: str,
+    dataset_tag: str,
+    tag: str,
+    resume_csv: str | None,
+    retry_failed: bool,
+) -> str:
+    """Create a context-aware zip archive next to the results directory."""
+    archive_base = _build_bundle_base_name(
+        results_dir=results_dir,
+        dataset_tag=dataset_tag,
+        tag=tag,
+        resume_csv=resume_csv,
+        retry_failed=retry_failed,
+    )
+    archive_path = shutil.make_archive(archive_base, "zip", root_dir=results_dir)
     print(f"[resumable] Bundled results to: {archive_path}")
     return archive_path
 
@@ -296,7 +337,7 @@ def main() -> int:
         import importlib
         loader_mod = importlib.import_module(config["loader_module"])
         loader_fn = getattr(loader_mod, config["loader_fn_name"])
-        from mpecss.helpers.benchmark_utils import run_benchmark_main
+        from mpecss.benchmark.benchmark_utils import run_benchmark_main
     except ImportError as e:
         print(f"[ERROR] Could not import mpecss: {e}")
         print("Make sure the cloned repository is on sys.path and the notebook install cell completed.")
@@ -452,7 +493,13 @@ def main() -> int:
 
     if args.bundle_output and not args.summary_only:
         if _has_output_artifacts(results_dir):
-            _bundle_results(results_dir)
+            _bundle_results(
+                results_dir=results_dir,
+                dataset_tag=args.dataset,
+                tag=args.tag,
+                resume_csv=resume_csv,
+                retry_failed=args.retry_failed,
+            )
         else:
             logger.warning(f"No output artifacts found in {results_dir}; skipping archive.")
 

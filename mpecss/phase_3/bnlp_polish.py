@@ -6,8 +6,8 @@ from typing import Dict, Any, Optional, Tuple, List
 import numpy as np
 import casadi as ca
 from mpecss.helpers.comp_residuals import benchmark_feas_res
-from mpecss.helpers.solver_metrics import extract_ipopt_kkt_res
-from mpecss.helpers.solver_wrapper import DEFAULT_IPOPT_OPTS, is_solver_success
+from mpecss.helpers.solver.solver_metrics import extract_ipopt_kkt_res
+from mpecss.helpers.solver.solver_wrapper import DEFAULT_IPOPT_OPTS, is_solver_success
 from mpecss.phase_3.bnlp_polish_sets import identify_active_set
 from mpecss.phase_3.bnlp_polish_utils import objective_not_worse, invalidate_stationarity_claim
 
@@ -125,7 +125,7 @@ def _build_bnlp(z_star, problem, I1, I2, I3=None, solver_opts=None, f_cut=None, 
     if solver_opts:
         opts.update(solver_opts)
     
-    from mpecss.helpers.solver_wrapper import build_universal_nlp_solver
+    from mpecss.helpers.solver.solver_wrapper import build_universal_nlp_solver
     n_x = problem.get('n_x', len(z_star))
     solver = build_universal_nlp_solver('bnlp', n_x, nlp, ipopt_opts=opts)
 

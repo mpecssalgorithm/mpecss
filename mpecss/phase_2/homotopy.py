@@ -8,7 +8,8 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 
-from mpecss.helpers.solver_wrapper import solve_with_solver_fallback, is_solver_success
+from mpecss.contracts import ProblemSpec, SolveResult, SolverStatus, StationarityClass
+from mpecss.helpers.solver.solver_wrapper import solve_with_solver_fallback, is_solver_success
 from mpecss.helpers.comp_residuals import complementarity_residual
 from mpecss.helpers.utils import IterationLog, export_csv
 from mpecss.phase_1.feasibility import run_feasibility_phase
@@ -16,52 +17,13 @@ from mpecss.phase_2.sign_test import evaluate_iteration_stationarity
 from mpecss.phase_2.t_update import compute_next_t
 from mpecss.phase_3.bstationarity import certify_bstationarity, check_mpec_licq
 from mpecss.phase_3.bnlp_polish import bnlp_polish, identify_active_set, _build_bnlp
+from mpecss.phase_2.config import DEFAULT_PARAMS, merge_params
 
 logger = logging.getLogger('mpecss.phase_2')
 
 _LPEC_BIACTIVE_THRESHOLD = 15
 
-_DEFAULT_MAX_OUTER = 3000
-
-DEFAULT_PARAMS: Dict[str, Any] = {
-    "t0": 1.0,
-    "kappa": 0.5,
-    "eps_tol": 1e-6,  # Standard MPEC tolerance (1e-6 common in papers)
-    "acceptable_tol": 1e-5,  # Accept solutions with comp_res below this (per IPOPT convention)
-    "delta_k": 0.0,
-    "max_outer": _DEFAULT_MAX_OUTER,
-
-    "tau": 1e-6,
-    "sta_tol": None,
-    "adaptive_t": True,
-    "stagnation_window": 10,
-    "solver_opts": None,
-    "log_csv": None,
-    "seed": 0,
-    "feasibility_phase": True,
-    "phase1_max_attempts": 3,
-    "phase1_random_restarts": 3,
-    "restoration_strategy": "cascade",
-    "restoration_enabled": True,
-    "perturb_eps": 0.01,
-    "gamma": 1.0,
-    "step_size": 0.1,
-    "max_restorations": 50,        # hard cap on total restoration calls per solve
-    "restoration_stag_window": 8,  # consecutive restorations with <0.01% comp_res
-    "wall_timeout": None,          # per-solve wall-clock budget in seconds (None = unlimited)
-    "max_adaptive_jumps": 500,     # hard cap on adaptive_jump regime triggers per solve
-    "restoration_comp_factor": 10,  # Only restore if comp_res > factor * eps_tol
-    "high_restoration_skip_threshold": 10,  # Skip final push if n_restorations >= this
-    "early_c_phase2_enabled": True,
-    "early_c_phase2_iters_small": 12,
-    "early_c_phase2_iters_large": 20,
-    "early_probe_phase2_iters_small": 20,
-    "early_probe_phase2_iters_medium": 24,
-    "early_probe_phase2_iters_large": 12,
-}
-
-
-def _safe_obj(problem: Dict[str, Any], z: np.ndarray) -> float:
+def _safe_obj(problem: ProblemSpec, z: np.ndarray) -> float:
     # Evaluate objective function safely, caching the evaluation function.
     try:
         import casadi as ca
@@ -83,15 +45,13 @@ def _coerce_kkt_res(value: Any) -> float:
     return value if np.isfinite(value) else float("nan")
 
 
-def _bstat_unsupported_reason(problem: Dict[str, Any]) -> Optional[str]:
+def _bstat_unsupported_reason(problem: ProblemSpec) -> Optional[str]:
     # Return a reason when the current B-stationarity certificate is unsupported.
     return None
 
 
-def run_mpecss(problem: Dict[str, Any], z0: np.ndarray, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    p = dict(DEFAULT_PARAMS)
-    if params:
-        p.update(params)
+def run_mpecss(problem: ProblemSpec, z0: np.ndarray, params: Optional[Dict[str, Any]] = None) -> SolveResult:
+    p = merge_params(params)
     progress_cb = p.get("progress_callback")
 
     def _emit_progress(stage: str, force: bool = False, **fields: Any) -> None:

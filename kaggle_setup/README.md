@@ -72,7 +72,7 @@ This will trigger the execution of the notebook and save the outputs to Kaggle's
 
 After completion:
 1. Go to **Output** tab
-2. Download `/kaggle/working/outputs.zip` for a single archive
+2. Download the generated archive in `/kaggle/working/` (for example: `mpeclib_full_Official_YYYYMMDD_HHMMSS_artifacts.zip`)
 3. You can also inspect the unpacked files under `/kaggle/working/outputs/`
 
 ---

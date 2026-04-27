@@ -124,7 +124,7 @@ def _solve_phase_i_nlp(
         opts = dict(_PHASE_I_IPOPT_OPTS)
         if solver_opts:
             opts.update(solver_opts)
-        from mpecss.helpers.solver_wrapper import build_universal_nlp_solver
+        from mpecss.helpers.solver.solver_wrapper import build_universal_nlp_solver
         solver = build_universal_nlp_solver('phase_i', n_x, nlp, ipopt_opts=opts)
         sol = solver(x0=z0, lbg=lbg_parts, ubg=ubg_parts, lbx=lbx, ubx=ubx)
 
@@ -137,7 +137,7 @@ def _solve_phase_i_nlp(
         opts = dict(_PHASE_I_IPOPT_OPTS)
         if solver_opts:
             opts.update(solver_opts)
-        from mpecss.helpers.solver_wrapper import build_universal_nlp_solver
+        from mpecss.helpers.solver.solver_wrapper import build_universal_nlp_solver
         solver = build_universal_nlp_solver('phase_i', n_x, nlp, ipopt_opts=opts)
         sol = solver(x0=z0, lbg=lbg_parts, ubg=ubg_parts, lbx=lbx, ubx=ubx)
 
@@ -219,7 +219,7 @@ def _solve_phase_i_nlp(
         opts = dict(_PHASE_I_IPOPT_OPTS)
         if solver_opts:
             opts.update(solver_opts)
-        from mpecss.helpers.solver_wrapper import build_universal_nlp_solver
+        from mpecss.helpers.solver.solver_wrapper import build_universal_nlp_solver
         solver = build_universal_nlp_solver('phase_i_epi', n_x, nlp, ipopt_opts=opts)
         sol = solver(x0=z0_aug, lbg=lbg_aug, ubg=ubg_aug, lbx=lbx_aug, ubx=ubx_aug)
 

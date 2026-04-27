@@ -4,8 +4,8 @@ import time
 import logging
 import numpy as np
 import casadi as ca
-from mpecss.helpers.solver_metrics import combine_kkt_residuals
-from mpecss.helpers.solver_sqp_options import (
+from mpecss.helpers.solver.solver_metrics import combine_kkt_residuals
+from mpecss.helpers.solver.solver_sqp_options import (
     DEFAULT_SQP_OPTS,
     DEFAULT_QPOASES_OPTS,
     SQP_SIZE_THRESHOLD,

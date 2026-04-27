@@ -27,14 +27,14 @@ except ImportError:
     psutil = None
 
 
-from mpecss.phase_2.mpecss import run_mpecss, DEFAULT_PARAMS
+from mpecss.phase_2.homotopy import run_mpecss, DEFAULT_PARAMS
 from mpecss.helpers.utils import IterationLog, export_csv
 
 from mpecss.phase_3.bnlp_polish import bnlp_polish
 from mpecss.phase_3.lpec_refine import lpec_refinement_loop
 from mpecss.phase_3.bstationarity import bstat_post_check
 
-from mpecss.helpers.benchmark_audit import (
+from mpecss.benchmark.benchmark_audit import (
     _BenchmarkAuditRecorder,
     _artifact_paths,
     _read_audit_artifact,
@@ -43,7 +43,7 @@ from mpecss.helpers.benchmark_audit import (
     _mark_audit_terminal_status,
     _json_safe,
 )
-from mpecss.helpers.benchmark_results import (
+from mpecss.benchmark.benchmark_results import (
     _summarize_result_state,
     _build_point_diagnostic_evaluator,
     _apply_raw_summary_columns,
@@ -52,7 +52,7 @@ from mpecss.helpers.benchmark_results import (
     _infer_final_result_source,
     _preserve_stronger_raw_certificate,
 )
-from mpecss.helpers.benchmark_failure import (
+from mpecss.benchmark.benchmark_failure import (
     _classify_problem_size,
     _build_failure_result,
 )
@@ -194,7 +194,7 @@ def _check_and_cleanup_memory(problem_idx: int, force: bool = False):
     if _problems_since_memory_log >= MEMORY_LOG_INTERVAL or force:
         _problems_since_memory_log = 0
         try:
-            from mpecss.helpers.solver_cache import log_cache_stats, get_cache_stats
+            from mpecss.helpers.solver.solver_cache import log_cache_stats, get_cache_stats
             stats = get_cache_stats()
             logger.info(
                 f"[Problem #{problem_idx}] Memory: {current_mb:.0f}MB | "
@@ -212,7 +212,7 @@ def _check_and_cleanup_memory(problem_idx: int, force: bool = False):
             f"Triggering aggressive cleanup."
         )
         try:
-            from mpecss.helpers.solver_cache import clear_solver_cache
+            from mpecss.helpers.solver.solver_cache import clear_solver_cache
             from mpecss.phase_3.bstationarity import clear_jacobian_cache as clear_bstat_jac
             clear_solver_cache(aggressive=True)
             clear_bstat_jac()
@@ -240,7 +240,7 @@ def run_single_problem_internal(
     # Core logic to run a single problem and return the wide data row.
     import gc
 
-    from mpecss.helpers.solver_cache import clear_solver_cache, check_memory_pressure
+    from mpecss.helpers.solver.solver_cache import clear_solver_cache, check_memory_pressure
     from mpecss.phase_3.bstationarity import clear_jacobian_cache as clear_bstat_jac
 
     clear_solver_cache(aggressive=False)
@@ -635,7 +635,7 @@ def run_single_problem_internal(
     audit.complete(res.get("status", "unknown"), final_summary)
     _write_result_row_artifact(row, artifacts["result_row_json"])
 
-    from mpecss.helpers.solver_cache import clear_solver_cache
+    from mpecss.helpers.solver.solver_cache import clear_solver_cache
     from mpecss.phase_3.bstationarity import clear_jacobian_cache as clear_bstat_jac
     clear_solver_cache()
     clear_bstat_jac()
@@ -1102,7 +1102,7 @@ def _worker_process(problem_file, loader_fn, args_path, seed, tag, results_dir,
         )
     finally:
         try:
-            from mpecss.helpers.solver_cache import clear_solver_cache
+            from mpecss.helpers.solver.solver_cache import clear_solver_cache
             from mpecss.phase_3.bstationarity import clear_jacobian_cache as clear_bstat_jac
             clear_solver_cache(aggressive=True)
             clear_bstat_jac()

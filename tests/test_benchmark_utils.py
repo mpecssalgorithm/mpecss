@@ -1,6 +1,6 @@
 import pandas as pd
 
-from mpecss.helpers.benchmark_utils import _save_csv
+from mpecss.benchmark.benchmark_utils import _save_csv
 
 
 def test_save_csv_keeps_one_row_per_problem_file(tmp_path):

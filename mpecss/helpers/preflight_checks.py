@@ -46,7 +46,7 @@ def _check_repo_layout(repo_root: Path) -> list[str]:
     required_files = (
         repo_root / "pyproject.toml",
         repo_root / "kaggle_setup" / "resumable_benchmark.py",
-        repo_root / "mpecss" / "helpers" / "benchmark_utils.py",
+        repo_root / "mpecss" / "benchmark" / "benchmark_utils.py",
     )
     for path in required_files:
         if not path.is_file():

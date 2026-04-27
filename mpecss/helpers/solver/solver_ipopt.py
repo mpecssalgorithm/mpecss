@@ -4,15 +4,15 @@ import time
 import logging
 import numpy as np
 import casadi as ca
-from mpecss.helpers.solver_metrics import extract_ipopt_kkt_res
-from mpecss.helpers.solver_ipopt_config import (
+from mpecss.helpers.solver.solver_metrics import extract_ipopt_kkt_res
+from mpecss.helpers.solver.solver_ipopt_config import (
     DEFAULT_IPOPT_OPTS,
     _WARM_START_EXTRA_OPTS,
     _FALLBACK_TRIGGER_STATUSES,
     _SOLVER_FALLBACK_CHAIN,
 )
-from mpecss.helpers.solver_ipopt_helpers import is_solver_success, _zero_fallback
-from mpecss.helpers.solver_cache import (
+from mpecss.helpers.solver.solver_ipopt_helpers import is_solver_success, _zero_fallback
+from mpecss.helpers.solver.solver_cache import (
     _SOLVER_CACHE,
     _PARAMETRIC_CACHE,
     _get_template,
@@ -44,7 +44,7 @@ def _get_concrete_solver(problem, t_k, delta_k, solver_opts, warm_start, smoothi
 
     if not solver_opts or 'linear_solver' not in solver_opts:
         try:
-            from mpecss.helpers.solver_acceleration import select_linear_solver_oss
+            from mpecss.helpers.solver.solver_acceleration import select_linear_solver_oss
             auto_ls = select_linear_solver_oss(n_x)
             if auto_ls != opts.get('linear_solver'):
                 logger.debug(f'Auto-selecting linear solver: {auto_ls} for n_x={n_x}')
@@ -218,7 +218,7 @@ def solve_with_solver_fallback(z0, t_k, delta_k, problem, solver_opts=None,
     n_x = problem.get('n_x', 0)
     
     try:
-        from mpecss.helpers.solver_acceleration import is_sqp_recommended
+        from mpecss.helpers.solver.solver_acceleration import is_sqp_recommended
         if is_sqp_recommended(n_x):
             sqp_sol = _try_sqp_solve(z0, t_k, delta_k, problem, lam_g0, lam_x0, smoothing)
             if sqp_sol is not None and is_solver_success(sqp_sol['status']):
@@ -276,8 +276,8 @@ def solve_with_solver_fallback(z0, t_k, delta_k, problem, solver_opts=None,
 def _try_sqp_solve(z0, t_k, delta_k, problem, lam_g0, lam_x0, smoothing):
     # Attempt to solve the smoothed NLP using SQP+qpOASES.
     try:
-        from mpecss.helpers.solver_sqp import SQPSolver, QPOASES_AVAILABLE
-        from mpecss.helpers.solver_cache import _get_template
+        from mpecss.helpers.solver.solver_sqp import SQPSolver, QPOASES_AVAILABLE
+        from mpecss.helpers.solver.solver_cache import _get_template
         
         if not QPOASES_AVAILABLE:
             return None

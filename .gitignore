@@ -4,15 +4,18 @@ benchmarks/mpeclib/mpeclib-gms
 benchmarks/nosbench/nosbench-json
 benchmarks/nosbench/nosbench-mat
 
-
 # --- Python Caches & Artifacts ---
 __pycache__/
+
+copilot-instructions.md
 
 # --- Results ---
 results/*
 
-paper/*
+mpecss_paper/*
 
-Sample_papers/*
+sample_papers/*
 
-Research_papers/*
+research_papers/*
+
+tests/*

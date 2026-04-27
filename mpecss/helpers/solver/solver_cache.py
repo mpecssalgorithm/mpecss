@@ -6,8 +6,8 @@ from typing import Dict, Any, Optional
 
 import casadi as ca
 
-from mpecss.helpers.solver_cache_keys import _t_round, _tol_bucket, _cache_key
-from mpecss.helpers.solver_cache_store import (
+from mpecss.helpers.solver.solver_cache_keys import _t_round, _tol_bucket, _cache_key
+from mpecss.helpers.solver.solver_cache_store import (
     LRUCache,
     MAX_TEMPLATE_CACHE_SIZE,
     MAX_SOLVER_CACHE_SIZE,
