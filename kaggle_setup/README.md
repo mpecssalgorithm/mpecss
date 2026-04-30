@@ -123,6 +123,29 @@ Tip (Recommendation): On kaggle free tier, At the same time 5 notebooks can be r
 | NOSBENCH Group 5 | 100 | `MPECSS_Kaggle_NosBench_Group5.ipynb` | 3600s | 42 |
 | NOSBENCH Group 6 | 100 | `MPECSS_Kaggle_NosBench_Group6.ipynb` | 3600s | 42 |
 
+### Public Executed Kaggle Runs
+
+All public runs below pin the benchmark execution commit `6117ae6aa2e118936ca2ada4c44b175d091ce8ad`.
+
+| Run | Local notebook | Public Kaggle notebook |
+|---|---|---|
+| MPECLib official | `MPECSS_Kaggle_MPECLib.ipynb` | [mpeclib-official-run](https://www.kaggle.com/code/mralexsantora/mpeclib-official-run) |
+| MacMPEC official | `MPECSS_Kaggle_MacMPEC.ipynb` | [macmpec-official-run](https://www.kaggle.com/code/mralexsantora/macmpec-official-run) |
+| NOSBENCH Group 1 official | `MPECSS_Kaggle_NosBench_Group1.ipynb` | [nosbench1-official-run](https://www.kaggle.com/code/mralexsantora/nosbench1-official-run) |
+| NOSBENCH Group 2 official | `MPECSS_Kaggle_NosBench_Group2.ipynb` | [nosbench2-official-run](https://www.kaggle.com/code/mralexsantora/nosbench2-official-run) |
+| NOSBENCH Group 3 official | `MPECSS_Kaggle_NosBench_Group3.ipynb` | [nosbench3-official-run](https://www.kaggle.com/code/mralexsantora/nosbench3-official-run) |
+| NOSBENCH Group 4 official | `MPECSS_Kaggle_NosBench_Group4.ipynb` | [nosbench4-official-run](https://www.kaggle.com/code/mrsaurabhtanwar/nosbench4-official-run) |
+| NOSBENCH Group 5 official | `MPECSS_Kaggle_NosBench_Group5.ipynb` | [nosbench5-official-run](https://www.kaggle.com/code/mrsaurabhtanwar/nosbench5-official-run) |
+| NOSBENCH Group 6 official | `MPECSS_Kaggle_NosBench_Group6.ipynb` | [nosbench6-official-run](https://www.kaggle.com/code/mrsaurabhtanwar/nosbench6-official-run) |
+| MacMPEC fixed Phase II ablation | `MPECSS_Kaggle_MacMPEC_Ablation_FixedPhaseII.ipynb` | [macmpec-ab-fixt](https://www.kaggle.com/code/mrsaurabhtanwar/macmpec-ab-fixt) |
+| MacMPEC no Phase I ablation | `MPECSS_Kaggle_MacMPEC_Ablation_NoPhaseI.ipynb` | [macmpec-ab-nph1](https://www.kaggle.com/code/mrsaurabhtanwar/macmpec-ab-nph1) |
+| MacMPEC `kappa=0.3` | `MPECSS_Kaggle_MacMPEC_ParamSensitivity_kappa_0p3.ipynb` | [macmpec-kappa-0-3](https://www.kaggle.com/code/mrgauravtanwar/macmpec-kappa-0-3) |
+| MacMPEC `kappa=0.8` | `MPECSS_Kaggle_MacMPEC_ParamSensitivity_kappa_0p8.ipynb` | [macmpec-kappa-0-8](https://www.kaggle.com/code/mrgauravtanwar/macmpec-kappa-0-8) |
+| MacMPEC `t0=0.1` | `MPECSS_Kaggle_MacMPEC_ParamSensitivity_t0_0p1.ipynb` | [macmpec-t0-1](https://www.kaggle.com/code/mrgauravtanwar/macmpec-t0-1) |
+| MacMPEC `t0=10` | `MPECSS_Kaggle_MacMPEC_ParamSensitivity_t0_10.ipynb` | [macmpec-t10](https://www.kaggle.com/code/mrgauravtanwar/macmpec-t10) |
+| MacMPEC seed 11 | `MPECSS_Kaggle_MacMPEC_SeedRobustness_Seed11.ipynb` | [macmpec-seed11](https://www.kaggle.com/code/mrgauravtanwar/macmpec-seed11) |
+| MacMPEC seed 123 | `MPECSS_Kaggle_MacMPEC_SeedRobustness_Seed123.ipynb` | [macmpec-seed123](https://www.kaggle.com/code/mradarshkumar/macmpec-seed123) |
+
 ### MacMPEC Ablation Study Notebooks
 
 These run the full MacMPEC suite with a specific algorithmic component disabled:
@@ -178,10 +201,10 @@ Each notebook executes the following steps (you can inspect the cells):
 1. **Clone the repository**:
    ```python
    !git clone https://github.com/mpecssalgorithm/mpecss.git /kaggle/working/mpecss-kaggle
-   !git -C /kaggle/working/mpecss-kaggle checkout PUT_RELEASE_COMMIT_SHA_HERE
+   !git -C /kaggle/working/mpecss-kaggle checkout 6117ae6aa2e118936ca2ada4c44b175d091ce8ad
    ```
 
-   > **Important**: Before running, replace `PUT_RELEASE_COMMIT_SHA_HERE` with the actual release commit SHA from the repository. For the final paper submission, this should be the commit tagged as the release version.
+   > **Important**: The notebooks intentionally use a full clone followed by checkout of the benchmark execution commit. Avoid `git clone --depth 1` here because a shallow clone may not contain this older commit after newer commits are pushed.
 
 2. **Install the package**:
    ```python
