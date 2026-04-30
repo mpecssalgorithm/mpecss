@@ -1,0 +1,21 @@
+# --- Benchmark Data ---
+# Keep the JSON benchmarks and metadata, ignore the rest if they get generated
+benchmarks/macmpec/macmpec-json/
+benchmarks/macmpec/macmpec-gms/
+benchmarks/mpeclib/mpeclib-gms/
+benchmarks/nosbench/nosbench-json/
+benchmarks/nosbench/nosbench-mat/
+
+# --- Python Caches & Artifacts ---
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# --- Documentation / Papers ---
+mpecss_paper/
+sample_papers/
+research_papers/
+
+# --- Local generated outputs ---
+results/

@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mpecss"
+version = "1.0.4"
+requires-python = ">=3.10"
+
+dependencies = [
+    "casadi>=3.6.3",
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scipy>=1.11",
+    "psutil>=5.9",
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7.4"]
+repro = ["pytest>=7.4"]
+
+[project.urls]
+Homepage = "https://github.com/mpecssalgorithm/mpecss"
+Repository = "https://github.com/mpecssalgorithm/mpecss"
+Issues = "https://github.com/mpecssalgorithm/mpecss/issues"
+Documentation = "https://github.com/mpecssalgorithm/mpecss#readme"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["mpecss*"]
