@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "dataset_tag": "nosbench",
+  "tag": "Kaggle_NosBench_Group2",
+  "run_id": "20260430_013857",
+  "problem_file": "TFPOB_003_001_005_2_RIIA_STEP_4_IEC_0.json",
+  "status": "timeout",
+  "last_phase": "phase_ii_iter",
+  "started_at": "2026-04-30T05:38:35.376429",
+  "last_updated_at": "2026-04-30T06:38:39.220314",
+  "elapsed_wall_s": 3605.0934948921204,
+  "artifacts": {},
+  "stage_summaries": {},
+  "diagnostics": {},
+  "progress": {
+    "seed": 42,
+    "wall_timeout_cfg": 3600.0,
+    "internal_timeout_s": 2880.0,
+    "iteration": 6,
+    "comp_res": 10376.31066540731,
+    "best_comp_res": 0.001079032937696423,
+    "feasibility_achieved": false,
+    "sign_pass": true,
+    "solver_status": "Solve_Succeeded",
+    "n_biactive": 0,
+    "t_k": 0.0003371977930301322
+  },
+  "problem_name": "TFPOB_003_001_005_2_RIIA_STEP_4_IEC_0",
+  "problem_metadata": {
+    "family": "nosbench",
+    "n_x": 579,
+    "n_comp": 240,
+    "n_con": 334,
+    "n_p": 41,
+    "source_path": "/kaggle/input/datasets/mralexsantora/mpecss-benchmark/benchmarks/nosbench/nosbench-json/TFPOB_003_001_005_2_RIIA_STEP_4_IEC_0.json"
+  },
+  "completed_at": "2026-04-30T06:38:39.220314",
+  "error_msg": "Wall-clock deadline exceeded (force killed)"
+}

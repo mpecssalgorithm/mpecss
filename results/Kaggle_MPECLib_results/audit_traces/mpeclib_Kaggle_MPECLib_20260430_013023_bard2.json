@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "dataset_tag": "mpeclib",
+  "tag": "Kaggle_MPECLib",
+  "run_id": "20260430_013023",
+  "problem_file": "bard2.nl.json",
+  "status": "unsupported_model",
+  "last_phase": "diagnostics_unavailable",
+  "started_at": "2026-04-30T02:08:08.969132",
+  "last_updated_at": "2026-04-30T02:08:08.998966",
+  "elapsed_wall_s": 0.029842383999948652,
+  "artifacts": {
+    "phase_ii_iteration_log_csv": "/kaggle/working/outputs/iteration_logs/mpeclib_Kaggle_MPECLib_20260430_013023_bard2.csv"
+  },
+  "stage_summaries": {
+    "raw_run_mpecss": {
+      "status": "unsupported_model",
+      "stationarity": "FAIL",
+      "f_final": 3.492340598870945,
+      "comp_res": 6.50000509047863e-11,
+      "kkt_res": null,
+      "sign_test_pass": null,
+      "b_stationarity": null,
+      "lpec_obj": null,
+      "licq_holds": null,
+      "n_outer_iters": 0,
+      "n_restorations": 0,
+      "cpu_time": 0.0009685690001788316,
+      "log_count": 0,
+      "point_sha256": "6c0c2fcebc05ba0206c5d5ae4ac5c8a8aed283ea3a33f21ff4f9c7a058e52a24",
+      "point_dim": 13,
+      "point_inf_norm": 0.009588310114083952,
+      "point_l2_norm": 0.01987485564888515,
+      "point_all_finite": true,
+      "bstat_details": {
+        "lpec_status": "unsupported_model",
+        "classification": "unsupported_model",
+        "licq_holds": null,
+        "licq_rank": null,
+        "lpec_obj": null,
+        "timed_out": null,
+        "elapsed_s": null
+      }
+    },
+    "final": {
+      "status": "unsupported_model",
+      "stationarity": "FAIL",
+      "f_final": 3.492340598870945,
+      "comp_res": 6.50000509047863e-11,
+      "kkt_res": null,
+      "sign_test_pass": null,
+      "b_stationarity": null,
+      "lpec_obj": null,
+      "licq_holds": null,
+      "n_outer_iters": 0,
+      "n_restorations": 0,
+      "cpu_time": 0.0009685690001788316,
+      "log_count": 0,
+      "point_sha256": "6c0c2fcebc05ba0206c5d5ae4ac5c8a8aed283ea3a33f21ff4f9c7a058e52a24",
+      "point_dim": 13,
+      "point_inf_norm": 0.009588310114083952,
+      "point_l2_norm": 0.01987485564888515,
+      "point_all_finite": true,
+      "bstat_details": {
+        "lpec_status": "unsupported_model",
+        "classification": "unsupported_model",
+        "licq_holds": null,
+        "licq_rank": null,
+        "lpec_obj": null,
+        "timed_out": null,
+        "elapsed_s": null
+      }
+    }
+  },
+  "diagnostics": {},
+  "progress": {
+    "seed": 42,
+    "wall_timeout_cfg": 3600.0,
+    "internal_timeout_s": 2880.0,
+    "iteration": 0,
+    "comp_res": 6.50000509047863e-11,
+    "best_comp_res": 6.50000509047863e-11,
+    "reason": "bard2: free lower bounds on H are not supported by the homotopy model"
+  },
+  "problem_name": "bard2",
+  "problem_metadata": {
+    "family": "bard",
+    "n_x": 13,
+    "n_comp": 4,
+    "n_con": 5,
+    "n_p": 0,
+    "source_path": "/kaggle/input/datasets/mralexsantora/mpecss-benchmark/benchmarks/mpeclib/mpeclib-json/bard2.nl.json"
+  },
+  "completed_at": "2026-04-30T02:08:08.998923"
+}

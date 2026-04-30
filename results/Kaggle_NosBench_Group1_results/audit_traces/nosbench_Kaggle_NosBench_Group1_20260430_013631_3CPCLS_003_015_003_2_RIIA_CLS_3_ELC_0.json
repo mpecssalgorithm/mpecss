@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "dataset_tag": "nosbench",
+  "tag": "Kaggle_NosBench_Group1",
+  "run_id": "20260430_013631",
+  "problem_file": "3CPCLS_003_015_003_2_RIIA_CLS_3_ELC_0.json",
+  "status": "crashed",
+  "last_phase": "external_bnlp_started",
+  "started_at": "2026-04-30T06:48:23.580061",
+  "last_updated_at": "2026-04-30T07:46:01.405639",
+  "elapsed_wall_s": 3457.8255773300007,
+  "artifacts": {},
+  "stage_summaries": {
+    "raw_run_mpecss": {
+      "status": "comp_infeasible",
+      "stationarity": "FAIL",
+      "f_final": 15510.90471958719,
+      "comp_res": 0.2500000099997359,
+      "kkt_res": 2.104486562273605e-08,
+      "sign_test_pass": true,
+      "b_stationarity": null,
+      "lpec_obj": null,
+      "licq_holds": null,
+      "n_outer_iters": 3,
+      "n_restorations": 0,
+      "cpu_time": 3454.6030325540014,
+      "log_count": 3,
+      "point_sha256": "237d09655157931a4d403f0ff75c759c1c02d977ef11d0c492d0d3b32633f665",
+      "point_dim": 7317,
+      "point_inf_norm": 99947.05921028933,
+      "point_l2_norm": 444954.21366494574,
+      "point_all_finite": true,
+      "phase_i": {
+        "success": false,
+        "cpu_time": 0.0,
+        "n_attempts": 0,
+        "initial_comp_res": 2.0383775371063435,
+        "final_comp_res": 2.0383775371063435,
+        "feasibility_achieved": false,
+        "near_feasibility": false
+      }
+    }
+  },
+  "diagnostics": {},
+  "progress": {
+    "seed": 42,
+    "wall_timeout_cfg": 3600.0,
+    "internal_timeout_s": 2880.0,
+    "iteration": 3,
+    "comp_res": 0.2500000099997359,
+    "best_comp_res": 0.2500000099997359,
+    "feasibility_achieved": false,
+    "sign_pass": true,
+    "solver_status": "Solved_To_Acceptable_Level",
+    "n_biactive": 1511,
+    "t_k": 0.25
+  },
+  "problem_name": "3CPCLS_003_015_003_2_RIIA_CLS_3_ELC_0",
+  "problem_metadata": {
+    "family": "nosbench",
+    "n_x": 7317,
+    "n_comp": 4950,
+    "n_con": 5472,
+    "n_p": 36,
+    "source_path": "/kaggle/input/datasets/mralexsantora/mpecss-benchmark/benchmarks/nosbench/nosbench-json/3CPCLS_003_015_003_2_RIIA_CLS_3_ELC_0.json"
+  },
+  "error_msg": "Solver error: .../casadi/core/function_internal.cpp:152: Error calling IpoptInterface::init for 'bnlp':\n.../casadi/core/nlpsol.cpp:582: Assertion \"sparsity_out_.at(NLPSOL_G).is_dense() && sparsity_out_.at(NLPSOL_G).is_vector()\" failed:\nExpected a dense vector 'g', but got 15372x1,14697nz."
+}

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "dataset_tag": "nosbench",
+  "tag": "Kaggle_NosBench_Group5",
+  "run_id": "20260430_014646",
+  "problem_file": "DRNLND_002_030_003_2_RIIA_STEP_4_IEC_0.json",
+  "status": "timeout",
+  "last_phase": "phase_ii_iter",
+  "started_at": "2026-04-30T07:10:36.285365",
+  "last_updated_at": "2026-04-30T08:10:40.143720",
+  "elapsed_wall_s": 3605.1173934936523,
+  "artifacts": {},
+  "stage_summaries": {},
+  "diagnostics": {},
+  "progress": {
+    "seed": 42,
+    "wall_timeout_cfg": 3600.0,
+    "internal_timeout_s": 2880.0,
+    "iteration": 7,
+    "comp_res": 0.015625009999999915,
+    "best_comp_res": 0.015625009999999915,
+    "feasibility_achieved": false,
+    "sign_pass": true,
+    "solver_status": "Solve_Succeeded",
+    "n_biactive": 55,
+    "t_k": 0.015625
+  },
+  "problem_name": "DRNLND_002_030_003_2_RIIA_STEP_4_IEC_0",
+  "problem_metadata": {
+    "family": "nosbench",
+    "n_x": 4507,
+    "n_comp": 1440,
+    "n_con": 2947,
+    "n_p": 19,
+    "source_path": "/kaggle/input/datasets/mrsaurabhtanwar/mpecss-benchmark/benchmarks/nosbench/nosbench-json/DRNLND_002_030_003_2_RIIA_STEP_4_IEC_0.json"
+  },
+  "completed_at": "2026-04-30T08:10:40.143720",
+  "error_msg": "Wall-clock deadline exceeded (force killed)"
+}

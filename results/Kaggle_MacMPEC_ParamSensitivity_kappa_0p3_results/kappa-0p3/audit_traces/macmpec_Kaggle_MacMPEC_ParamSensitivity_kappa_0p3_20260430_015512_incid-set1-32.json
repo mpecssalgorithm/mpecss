@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "dataset_tag": "macmpec",
+  "tag": "Kaggle_MacMPEC_ParamSensitivity_kappa_0p3",
+  "run_id": "20260430_015512",
+  "problem_file": "incid-set1-32.nl.json",
+  "status": "timeout",
+  "last_phase": "phase_iii_started",
+  "started_at": "2026-04-30T04:17:59.096394",
+  "last_updated_at": "2026-04-30T04:48:03.149210",
+  "elapsed_wall_s": 1805.3210713863373,
+  "artifacts": {},
+  "stage_summaries": {},
+  "diagnostics": {},
+  "progress": {
+    "seed": 42,
+    "wall_timeout_cfg": 1800.0,
+    "internal_timeout_s": 1440.0,
+    "iteration": 0,
+    "comp_res": 2.0690274506392477e-08,
+    "best_comp_res": 2.0690274506392477e-08,
+    "feasibility_achieved": true,
+    "sign_pass": null
+  },
+  "problem_name": "incid-set1-32",
+  "problem_metadata": {
+    "family": "macmpec",
+    "n_x": 1989,
+    "n_comp": 961,
+    "n_con": 1042,
+    "n_p": 0,
+    "source_path": "/kaggle/input/datasets/mrgauravtanwar/mpecss-benchmark/benchmarks/macmpec/macmpec-json/incid-set1-32.nl.json"
+  },
+  "completed_at": "2026-04-30T04:48:03.149210",
+  "error_msg": "Wall-clock deadline exceeded (force killed)"
+}

@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "dataset_tag": "nosbench",
+  "tag": "Kaggle_NosBench_Group2",
+  "run_id": "20260430_013857",
+  "problem_file": "MFTOPT_001_053_003_2_RIIA_STEP_4_FIL_0.json",
+  "status": "timeout",
+  "last_phase": "external_lpec_bstat_started",
+  "started_at": "2026-04-30T07:12:09.760460",
+  "last_updated_at": "2026-04-30T08:12:12.742933",
+  "elapsed_wall_s": 3605.2670073509216,
+  "artifacts": {},
+  "stage_summaries": {
+    "raw_run_mpecss": {
+      "status": "converged",
+      "stationarity": "C",
+      "f_final": 3.6125607716073938,
+      "comp_res": 1.7927121443099695e-08,
+      "kkt_res": null,
+      "sign_test_pass": false,
+      "b_stationarity": false,
+      "lpec_obj": -0.3734597905273964,
+      "licq_holds": false,
+      "n_outer_iters": 0,
+      "n_restorations": 0,
+      "cpu_time": 3496.5276126220015,
+      "log_count": 0,
+      "point_sha256": "1ee5ede1d074288bca99122c538d1730fba829815d156a5eee18950455b57a09",
+      "point_dim": 2762,
+      "point_inf_norm": 3.5376602237573462,
+      "point_l2_norm": 11.342457267663733,
+      "point_all_finite": true,
+      "phase_i": {
+        "success": true,
+        "cpu_time": 98.05592479000188,
+        "n_attempts": 2,
+        "initial_comp_res": 1.521117810780485,
+        "final_comp_res": 1.7927121443099695e-08,
+        "feasibility_achieved": true,
+        "near_feasibility": true
+      },
+      "bstat_details": {
+        "lpec_status": "complete",
+        "classification": "not B-stationary",
+        "licq_holds": false,
+        "licq_rank": 2286,
+        "lpec_obj": -0.3734597905273964,
+        "timed_out": false,
+        "elapsed_s": 0.5346229076385498
+      }
+    },
+    "after_external_bnlp": {
+      "status": "converged",
+      "stationarity": "C",
+      "f_final": 3.6125607716073938,
+      "comp_res": 1.7927121443099695e-08,
+      "kkt_res": null,
+      "sign_test_pass": false,
+      "b_stationarity": false,
+      "lpec_obj": -0.3734597905273964,
+      "licq_holds": false,
+      "n_outer_iters": 0,
+      "n_restorations": 0,
+      "cpu_time": 3496.5276126220015,
+      "log_count": 0,
+      "point_sha256": "1ee5ede1d074288bca99122c538d1730fba829815d156a5eee18950455b57a09",
+      "point_dim": 2762,
+      "point_inf_norm": 3.5376602237573462,
+      "point_l2_norm": 11.342457267663733,
+      "point_all_finite": true,
+      "phase_i": {
+        "success": true,
+        "cpu_time": 98.05592479000188,
+        "n_attempts": 2,
+        "initial_comp_res": 1.521117810780485,
+        "final_comp_res": 1.7927121443099695e-08,
+        "feasibility_achieved": true,
+        "near_feasibility": true
+      },
+      "bnlp_polish": {
+        "accepted": false,
+        "status": "NonIpopt_Exception_Thrown",
+        "success": false,
+        "f_val": 0.0,
+        "original_f_val": 3.6125607716073938,
+        "comp_res_polish": null,
+        "improvement": 0
+      },
+      "bstat_details": {
+        "lpec_status": "complete",
+        "classification": "not B-stationary",
+        "licq_holds": false,
+        "licq_rank": 2286,
+        "lpec_obj": -0.3734597905273964,
+        "timed_out": false,
+        "elapsed_s": 0.5346229076385498
+      }
+    }
+  },
+  "diagnostics": {},
+  "progress": {
+    "seed": 42,
+    "wall_timeout_cfg": 3600.0,
+    "internal_timeout_s": 2880.0,
+    "iteration": 0,
+    "comp_res": 1.7927121443099695e-08,
+    "best_comp_res": 1.7927121443099695e-08,
+    "feasibility_achieved": true,
+    "sign_pass": false,
+    "bnlp_accepted": false
+  },
+  "problem_name": "MFTOPT_001_053_003_2_RIIA_STEP_4_FIL_0",
+  "problem_metadata": {
+    "family": "nosbench",
+    "n_x": 2762,
+    "n_comp": 636,
+    "n_con": 1971,
+    "n_p": 11,
+    "source_path": "/kaggle/input/datasets/mralexsantora/mpecss-benchmark/benchmarks/nosbench/nosbench-json/MFTOPT_001_053_003_2_RIIA_STEP_4_FIL_0.json"
+  },
+  "completed_at": "2026-04-30T08:12:12.742933",
+  "error_msg": "Wall-clock deadline exceeded (force killed)"
+}

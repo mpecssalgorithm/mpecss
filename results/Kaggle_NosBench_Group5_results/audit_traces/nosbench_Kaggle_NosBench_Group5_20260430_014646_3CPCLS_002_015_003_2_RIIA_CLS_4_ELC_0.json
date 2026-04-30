@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "dataset_tag": "nosbench",
+  "tag": "Kaggle_NosBench_Group5",
+  "run_id": "20260430_014646",
+  "problem_file": "3CPCLS_002_015_003_2_RIIA_CLS_4_ELC_0.json",
+  "status": "timeout",
+  "last_phase": "external_bnlp_started",
+  "started_at": "2026-04-30T04:05:19.615636",
+  "last_updated_at": "2026-04-30T05:05:23.673776",
+  "elapsed_wall_s": 3605.279810190201,
+  "artifacts": {},
+  "stage_summaries": {
+    "raw_run_mpecss": {
+      "status": "comp_infeasible",
+      "stationarity": "FAIL",
+      "f_final": 15677.770890073973,
+      "comp_res": 0.1250000099986656,
+      "kkt_res": 2.763069759625086e-09,
+      "sign_test_pass": true,
+      "b_stationarity": null,
+      "lpec_obj": null,
+      "licq_holds": null,
+      "n_outer_iters": 5,
+      "n_restorations": 0,
+      "cpu_time": 3599.293304955001,
+      "log_count": 5,
+      "point_sha256": "eea414d1b4c571e113148e3b79f71eca7b5b6cbe3f6a4e9360b6313884565505",
+      "point_dim": 7317,
+      "point_inf_norm": 100048.24785264063,
+      "point_l2_norm": 1080524.3417115025,
+      "point_all_finite": true,
+      "phase_i": {
+        "success": false,
+        "cpu_time": 0.0,
+        "n_attempts": 0,
+        "initial_comp_res": 3.0531176035684107,
+        "final_comp_res": 3.0531176035684107,
+        "feasibility_achieved": false,
+        "near_feasibility": false
+      }
+    }
+  },
+  "diagnostics": {},
+  "progress": {
+    "seed": 42,
+    "wall_timeout_cfg": 3600.0,
+    "internal_timeout_s": 2880.0,
+    "iteration": 5,
+    "comp_res": 0.1250000099986656,
+    "best_comp_res": 0.1250000099986656,
+    "feasibility_achieved": false,
+    "sign_pass": true,
+    "solver_status": "Solved_To_Acceptable_Level",
+    "n_biactive": 1042,
+    "t_k": 0.125
+  },
+  "problem_name": "3CPCLS_002_015_003_2_RIIA_CLS_4_ELC_0",
+  "problem_metadata": {
+    "family": "nosbench",
+    "n_x": 7317,
+    "n_comp": 3150,
+    "n_con": 5472,
+    "n_p": 36,
+    "source_path": "/kaggle/input/datasets/mrsaurabhtanwar/mpecss-benchmark/benchmarks/nosbench/nosbench-json/3CPCLS_002_015_003_2_RIIA_CLS_4_ELC_0.json"
+  },
+  "completed_at": "2026-04-30T05:05:23.673776",
+  "error_msg": "Wall-clock deadline exceeded (force killed)"
+}

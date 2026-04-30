@@ -1,0 +1,211 @@
+{
+  "schema_version": 1,
+  "dataset_tag": "macmpec",
+  "tag": "Kaggle_MacMPEC_SeedRobustness_Seed11",
+  "run_id": "20260430_020126",
+  "problem_file": "scholtes1.nl.json",
+  "status": "converged",
+  "last_phase": "external_lpec_bstat_completed",
+  "started_at": "2026-04-30T03:16:23.294119",
+  "last_updated_at": "2026-04-30T03:16:32.925515",
+  "elapsed_wall_s": 9.631399924000107,
+  "artifacts": {
+    "phase_ii_iteration_log_csv": "/kaggle/working/outputs_macmpec_seed_11/seed-11/iteration_logs/macmpec_Kaggle_MacMPEC_SeedRobustness_Seed11_20260430_020126_scholtes1.csv"
+  },
+  "stage_summaries": {
+    "raw_run_mpecss": {
+      "status": "converged",
+      "stationarity": "B",
+      "f_final": 1.9999999601828276,
+      "comp_res": 9.987989932201165e-09,
+      "kkt_res": 2.6937311401558734e-10,
+      "sign_test_pass": true,
+      "b_stationarity": true,
+      "lpec_obj": 0.0,
+      "licq_holds": true,
+      "n_outer_iters": 0,
+      "n_restorations": 0,
+      "cpu_time": 9.176862999999685,
+      "log_count": 0,
+      "point_sha256": "399733b1845946a2915116895f4104a34d61b4d671a3096542af4f4c744300db",
+      "point_dim": 3,
+      "point_inf_norm": 2.5000000001082308,
+      "point_l2_norm": 2.5000000001082308,
+      "point_all_finite": true,
+      "phase_i": {
+        "success": true,
+        "cpu_time": 9.123664188000475,
+        "n_attempts": 2,
+        "initial_comp_res": 4.393973499725575,
+        "final_comp_res": 2.4316672137122554e-08,
+        "feasibility_achieved": true,
+        "near_feasibility": true
+      },
+      "bstat_details": {
+        "lpec_status": "licq_equivalence",
+        "classification": "B-stationary (S + LICQ)",
+        "licq_holds": null,
+        "licq_rank": 1,
+        "lpec_obj": null,
+        "timed_out": null,
+        "elapsed_s": null
+      }
+    },
+    "after_external_bnlp": {
+      "status": "converged",
+      "stationarity": "B",
+      "f_final": 1.9999999601828276,
+      "comp_res": 9.987989932201165e-09,
+      "kkt_res": 2.6937311401558734e-10,
+      "sign_test_pass": true,
+      "b_stationarity": true,
+      "lpec_obj": 0.0,
+      "licq_holds": true,
+      "n_outer_iters": 0,
+      "n_restorations": 0,
+      "cpu_time": 9.176862999999685,
+      "log_count": 0,
+      "point_sha256": "399733b1845946a2915116895f4104a34d61b4d671a3096542af4f4c744300db",
+      "point_dim": 3,
+      "point_inf_norm": 2.5000000001082308,
+      "point_l2_norm": 2.5000000001082308,
+      "point_all_finite": true,
+      "phase_i": {
+        "success": true,
+        "cpu_time": 9.123664188000475,
+        "n_attempts": 2,
+        "initial_comp_res": 4.393973499725575,
+        "final_comp_res": 2.4316672137122554e-08,
+        "feasibility_achieved": true,
+        "near_feasibility": true
+      },
+      "bnlp_polish": {
+        "accepted": false,
+        "status": "Solve_Succeeded",
+        "success": true,
+        "f_val": 1.9999999800005002,
+        "original_f_val": 1.9999999601828276,
+        "comp_res_polish": -0.0,
+        "improvement": -1.9817672614053095e-08
+      },
+      "bstat_details": {
+        "lpec_status": "licq_equivalence",
+        "classification": "B-stationary (S + LICQ)",
+        "licq_holds": null,
+        "licq_rank": 1,
+        "lpec_obj": null,
+        "timed_out": null,
+        "elapsed_s": null
+      }
+    },
+    "final": {
+      "status": "converged",
+      "stationarity": "B",
+      "f_final": 1.9999999601828276,
+      "comp_res": 9.987989932201165e-09,
+      "kkt_res": 2.6937311401558734e-10,
+      "sign_test_pass": true,
+      "b_stationarity": true,
+      "lpec_obj": 1.9839028186559925e-08,
+      "licq_holds": true,
+      "n_outer_iters": 0,
+      "n_restorations": 0,
+      "cpu_time": 9.176862999999685,
+      "log_count": 0,
+      "point_sha256": "399733b1845946a2915116895f4104a34d61b4d671a3096542af4f4c744300db",
+      "point_dim": 3,
+      "point_inf_norm": 2.5000000001082308,
+      "point_l2_norm": 2.5000000001082308,
+      "point_all_finite": true,
+      "phase_i": {
+        "success": true,
+        "cpu_time": 9.123664188000475,
+        "n_attempts": 2,
+        "initial_comp_res": 4.393973499725575,
+        "final_comp_res": 2.4316672137122554e-08,
+        "feasibility_achieved": true,
+        "near_feasibility": true
+      },
+      "bnlp_polish": {
+        "accepted": false,
+        "status": "Solve_Succeeded",
+        "success": true,
+        "f_val": 1.9999999800005002,
+        "original_f_val": 1.9999999601828276,
+        "comp_res_polish": -0.0,
+        "improvement": -1.9817672614053095e-08
+      },
+      "lpec_refine": {
+        "bstat_found": true,
+        "n_outer": 1,
+        "n_inner_total": 1,
+        "n_bnlps": 0,
+        "n_lpecs": 1,
+        "improvement": 0.0,
+        "cpu_time": 0.40407188500012126
+      },
+      "bstat_details": {
+        "lpec_status": "complete",
+        "classification": "B-stationary",
+        "licq_holds": null,
+        "licq_rank": 1,
+        "lpec_obj": 1.9839028186559925e-08,
+        "timed_out": false,
+        "elapsed_s": 0.004359722137451172
+      }
+    }
+  },
+  "diagnostics": {
+    "raw": {
+      "point_sha256": "399733b1845946a2915116895f4104a34d61b4d671a3096542af4f4c744300db",
+      "point_dim": 3,
+      "point_inf_norm": 2.5000000001082308,
+      "point_l2_norm": 2.5000000001082308,
+      "point_all_finite": true,
+      "all_finite": true,
+      "objective_eval": 1.9999999601828276,
+      "benchmark_feas_res": 9.987989932201165e-09,
+      "biactive_res": 9.987989932201165e-09,
+      "orig_constr_violation": 0.0,
+      "var_bound_violation": 9.92059649927509e-09,
+      "comp_side_violation": 9.987989932201165e-09,
+      "overall_primal_violation": 9.987989932201165e-09
+    },
+    "final": {
+      "point_sha256": "399733b1845946a2915116895f4104a34d61b4d671a3096542af4f4c744300db",
+      "point_dim": 3,
+      "point_inf_norm": 2.5000000001082308,
+      "point_l2_norm": 2.5000000001082308,
+      "point_all_finite": true,
+      "all_finite": true,
+      "objective_eval": 1.9999999601828276,
+      "benchmark_feas_res": 9.987989932201165e-09,
+      "biactive_res": 9.987989932201165e-09,
+      "orig_constr_violation": 0.0,
+      "var_bound_violation": 9.92059649927509e-09,
+      "comp_side_violation": 9.987989932201165e-09,
+      "overall_primal_violation": 9.987989932201165e-09
+    }
+  },
+  "progress": {
+    "seed": 11,
+    "wall_timeout_cfg": 1800.0,
+    "internal_timeout_s": 1440.0,
+    "iteration": 0,
+    "comp_res": 9.987989932201165e-09,
+    "best_comp_res": 9.987989932201165e-09,
+    "feasibility_achieved": true,
+    "sign_pass": true,
+    "bnlp_accepted": false
+  },
+  "problem_name": "scholtes1",
+  "problem_metadata": {
+    "family": "macmpec",
+    "n_x": 3,
+    "n_comp": 1,
+    "n_con": 0,
+    "n_p": 0,
+    "source_path": "/kaggle/input/datasets/mrgauravtanwar/mpecss-benchmark/benchmarks/macmpec/macmpec-json/scholtes1.nl.json"
+  },
+  "completed_at": "2026-04-30T03:16:32.925413"
+}

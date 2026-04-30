@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "dataset_tag": "macmpec",
+  "tag": "Kaggle_MacMPEC_Ablation_NoPhaseI",
+  "run_id": "20260430_015208",
+  "problem_file": "pack-rig2-32.nl.json",
+  "status": "timeout",
+  "last_phase": "run_mpecss_started",
+  "started_at": "2026-04-30T04:01:01.729698",
+  "last_updated_at": "2026-04-30T04:31:05.607021",
+  "elapsed_wall_s": 1805.1053099632263,
+  "artifacts": {},
+  "stage_summaries": {},
+  "diagnostics": {},
+  "progress": {
+    "seed": 42,
+    "wall_timeout_cfg": 1800.0,
+    "internal_timeout_s": 1440.0
+  },
+  "problem_name": "pack-rig2-32",
+  "problem_metadata": {
+    "family": "macmpec",
+    "n_x": 1580,
+    "n_comp": 661,
+    "n_con": 918,
+    "n_p": 0,
+    "source_path": "/kaggle/input/datasets/mrsaurabhtanwar/mpecss-benchmark/benchmarks/macmpec/macmpec-json/pack-rig2-32.nl.json"
+  },
+  "completed_at": "2026-04-30T04:31:05.607021",
+  "error_msg": "Wall-clock deadline exceeded (force killed)"
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "dataset_tag": "macmpec",
+  "tag": "Kaggle_MacMPEC",
+  "run_id": "20260430_013418",
+  "problem_file": "pack-comp-32.nl.json",
+  "status": "timeout",
+  "last_phase": "phase_i_started",
+  "started_at": "2026-04-30T04:05:39.770279",
+  "last_updated_at": "2026-04-30T05:05:44.191292",
+  "elapsed_wall_s": 3605.6160233020782,
+  "artifacts": {},
+  "stage_summaries": {},
+  "diagnostics": {},
+  "progress": {
+    "seed": 42,
+    "wall_timeout_cfg": 3600.0,
+    "internal_timeout_s": 2880.0,
+    "iteration": 0
+  },
+  "problem_name": "pack-comp-32",
+  "problem_metadata": {
+    "family": "macmpec",
+    "n_x": 1955,
+    "n_comp": 961,
+    "n_con": 1177,
+    "n_p": 0,
+    "source_path": "/kaggle/input/datasets/mralexsantora/mpecss-benchmark/benchmarks/macmpec/macmpec-json/pack-comp-32.nl.json"
+  },
+  "completed_at": "2026-04-30T05:05:44.191292",
+  "error_msg": "Wall-clock deadline exceeded (force killed)"
+}

@@ -1,0 +1,211 @@
+{
+  "schema_version": 1,
+  "dataset_tag": "macmpec",
+  "tag": "Kaggle_MacMPEC_ParamSensitivity_kappa_0p3",
+  "run_id": "20260430_015512",
+  "problem_file": "qpec-200-2.nl.json",
+  "status": "converged",
+  "last_phase": "external_lpec_bstat_completed",
+  "started_at": "2026-04-30T02:22:33.189653",
+  "last_updated_at": "2026-04-30T02:37:16.020406",
+  "elapsed_wall_s": 882.830756996,
+  "artifacts": {
+    "phase_ii_iteration_log_csv": "/kaggle/working/outputs_macmpec_param_kappa_0p3/kappa-0p3/iteration_logs/macmpec_Kaggle_MacMPEC_ParamSensitivity_kappa_0p3_20260430_015512_qpec-200-2.csv"
+  },
+  "stage_summaries": {
+    "raw_run_mpecss": {
+      "status": "converged",
+      "stationarity": "B",
+      "f_final": -13.735905809059066,
+      "comp_res": 6.569488537799474e-08,
+      "kkt_res": 6.372319338865395e-12,
+      "sign_test_pass": true,
+      "b_stationarity": true,
+      "lpec_obj": 0.0,
+      "licq_holds": true,
+      "n_outer_iters": 0,
+      "n_restorations": 0,
+      "cpu_time": 654.1878597549999,
+      "log_count": 0,
+      "point_sha256": "e4e53b89b801f231893bce28fdbc4c680b2550abe160329acbf5671eaa9ff42b",
+      "point_dim": 220,
+      "point_inf_norm": 7.179840360367807,
+      "point_l2_norm": 23.966876359438785,
+      "point_all_finite": true,
+      "phase_i": {
+        "success": true,
+        "cpu_time": 263.6420242879999,
+        "n_attempts": 2,
+        "initial_comp_res": 2.1507839033953773,
+        "final_comp_res": 2.070443211394405e-07,
+        "feasibility_achieved": true,
+        "near_feasibility": true
+      },
+      "bstat_details": {
+        "lpec_status": "licq_equivalence",
+        "classification": "B-stationary (S + LICQ)",
+        "licq_holds": null,
+        "licq_rank": 204,
+        "lpec_obj": null,
+        "timed_out": null,
+        "elapsed_s": null
+      }
+    },
+    "after_external_bnlp": {
+      "status": "converged",
+      "stationarity": "B",
+      "f_final": -13.735905809059066,
+      "comp_res": 6.569488537799474e-08,
+      "kkt_res": 6.372319338865395e-12,
+      "sign_test_pass": true,
+      "b_stationarity": true,
+      "lpec_obj": 0.0,
+      "licq_holds": true,
+      "n_outer_iters": 0,
+      "n_restorations": 0,
+      "cpu_time": 654.1878597549999,
+      "log_count": 0,
+      "point_sha256": "e4e53b89b801f231893bce28fdbc4c680b2550abe160329acbf5671eaa9ff42b",
+      "point_dim": 220,
+      "point_inf_norm": 7.179840360367807,
+      "point_l2_norm": 23.966876359438785,
+      "point_all_finite": true,
+      "phase_i": {
+        "success": true,
+        "cpu_time": 263.6420242879999,
+        "n_attempts": 2,
+        "initial_comp_res": 2.1507839033953773,
+        "final_comp_res": 2.070443211394405e-07,
+        "feasibility_achieved": true,
+        "near_feasibility": true
+      },
+      "bnlp_polish": {
+        "accepted": false,
+        "status": "Solve_Succeeded",
+        "success": true,
+        "f_val": -13.73590390580833,
+        "original_f_val": -13.735905809059066,
+        "comp_res_polish": 9.999506524888124e-09,
+        "improvement": -1.9032507356797623e-06
+      },
+      "bstat_details": {
+        "lpec_status": "licq_equivalence",
+        "classification": "B-stationary (S + LICQ)",
+        "licq_holds": null,
+        "licq_rank": 204,
+        "lpec_obj": null,
+        "timed_out": null,
+        "elapsed_s": null
+      }
+    },
+    "final": {
+      "status": "converged",
+      "stationarity": "B",
+      "f_final": -13.735905809059066,
+      "comp_res": 6.569488537799474e-08,
+      "kkt_res": 6.372319338865395e-12,
+      "sign_test_pass": true,
+      "b_stationarity": true,
+      "lpec_obj": 0.0,
+      "licq_holds": true,
+      "n_outer_iters": 0,
+      "n_restorations": 0,
+      "cpu_time": 654.1878597549999,
+      "log_count": 0,
+      "point_sha256": "e4e53b89b801f231893bce28fdbc4c680b2550abe160329acbf5671eaa9ff42b",
+      "point_dim": 220,
+      "point_inf_norm": 7.179840360367807,
+      "point_l2_norm": 23.966876359438785,
+      "point_all_finite": true,
+      "phase_i": {
+        "success": true,
+        "cpu_time": 263.6420242879999,
+        "n_attempts": 2,
+        "initial_comp_res": 2.1507839033953773,
+        "final_comp_res": 2.070443211394405e-07,
+        "feasibility_achieved": true,
+        "near_feasibility": true
+      },
+      "bnlp_polish": {
+        "accepted": false,
+        "status": "Solve_Succeeded",
+        "success": true,
+        "f_val": -13.73590390580833,
+        "original_f_val": -13.735905809059066,
+        "comp_res_polish": 9.999506524888124e-09,
+        "improvement": -1.9032507356797623e-06
+      },
+      "lpec_refine": {
+        "bstat_found": false,
+        "n_outer": 1,
+        "n_inner_total": 3,
+        "n_bnlps": 4,
+        "n_lpecs": 2,
+        "improvement": 0.0,
+        "cpu_time": 186.2055468220001
+      },
+      "bstat_details": {
+        "lpec_status": "licq_equivalence",
+        "classification": "B-stationary (S + LICQ)",
+        "licq_holds": null,
+        "licq_rank": 204,
+        "lpec_obj": null,
+        "timed_out": null,
+        "elapsed_s": null
+      }
+    }
+  },
+  "diagnostics": {
+    "raw": {
+      "point_sha256": "e4e53b89b801f231893bce28fdbc4c680b2550abe160329acbf5671eaa9ff42b",
+      "point_dim": 220,
+      "point_inf_norm": 7.179840360367807,
+      "point_l2_norm": 23.966876359438785,
+      "point_all_finite": true,
+      "all_finite": true,
+      "objective_eval": -13.735905809059066,
+      "benchmark_feas_res": 6.569488537799474e-08,
+      "biactive_res": 7.179840360367807,
+      "orig_constr_violation": 1.9120993011156884e-08,
+      "var_bound_violation": 0.0,
+      "comp_side_violation": 9.988302891856482e-09,
+      "overall_primal_violation": 1.9120993011156884e-08
+    },
+    "final": {
+      "point_sha256": "e4e53b89b801f231893bce28fdbc4c680b2550abe160329acbf5671eaa9ff42b",
+      "point_dim": 220,
+      "point_inf_norm": 7.179840360367807,
+      "point_l2_norm": 23.966876359438785,
+      "point_all_finite": true,
+      "all_finite": true,
+      "objective_eval": -13.735905809059066,
+      "benchmark_feas_res": 6.569488537799474e-08,
+      "biactive_res": 7.179840360367807,
+      "orig_constr_violation": 1.9120993011156884e-08,
+      "var_bound_violation": 0.0,
+      "comp_side_violation": 9.988302891856482e-09,
+      "overall_primal_violation": 1.9120993011156884e-08
+    }
+  },
+  "progress": {
+    "seed": 42,
+    "wall_timeout_cfg": 1800.0,
+    "internal_timeout_s": 1440.0,
+    "iteration": 0,
+    "comp_res": 6.569488537799474e-08,
+    "best_comp_res": 6.569488537799474e-08,
+    "feasibility_achieved": true,
+    "sign_pass": true,
+    "bnlp_accepted": false
+  },
+  "problem_name": "qpec-200-2",
+  "problem_metadata": {
+    "family": "macmpec",
+    "n_x": 220,
+    "n_comp": 200,
+    "n_con": 4,
+    "n_p": 0,
+    "source_path": "/kaggle/input/datasets/mrgauravtanwar/mpecss-benchmark/benchmarks/macmpec/macmpec-json/qpec-200-2.nl.json"
+  },
+  "completed_at": "2026-04-30T02:37:16.020289"
+}
