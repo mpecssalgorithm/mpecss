@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use MPECSS, please cite the archived software release and the associated paper."
+title: "MPECSS: Scholtes Regularization with Adaptive Paths for Targeting B-stationary Points in MPECs"
+version: "1.0.4"
+commit: "6117ae6aa2e118936ca2ada4c44b175d091ce8ad"
+date-released: "2026-04-29"
+repository-code: "https://github.com/mpecssalgorithm/mpecss"
+doi: "10.5281/zenodo.19949992"
+license: "Apache-2.0"
+authors:
+  - name: "Saurabh"
+preferred-citation:
+  type: article
+  title: "MPECSS: Scholtes Regularization with Adaptive Paths for Targeting B-stationary Points in MPECs"
+  authors:
+    - name: "Saurabh"
+  year: 2026
+  notes: "Replace this placeholder with the journal DOI after publication."
